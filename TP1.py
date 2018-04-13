@@ -4,6 +4,21 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
 
+def getDates():
+    # Dates 
+    dates = quandl.get('WIKI/FB',rows = 5)
+    #print (dates)
+    print( type(dates.index)) # type panda 
+    print(len(dates.index))
+    # stack overflow for syntax tolist 
+    print(dates.index.tolist())
+    
+    datesLst = []
+    for d in dates.index.tolist():
+        #print(d)
+        date = str(d)
+        datesLst.append((date[:10]))
+    return datesLst
 
 
 def getClosingValues():
@@ -11,18 +26,6 @@ def getClosingValues():
 
     # closing values 
     closingVal  = quandl.get('WIKI/FB.4',rows = 5)
-    
-    # Dates 
-    dates = quandl.get('WIKI/FB',rows = 5,column_index=0)
-    #print (dates)
-    print( dates.index)
-    print(len(dates.index))
-    print(dates.index.tolist())
-    
-    for d in dates.index.tolist():
-        #print(d)
-        date = str(d)
-        print (date[:10])
 
     dataHigh = quandl.get('WIKI/FB.2',rows = 5) 
 
@@ -42,7 +45,9 @@ def getClosingValues():
 # 112 website template 
 def draw(canvas, width, height):
     closingValues = getClosingValues()
-    increment = width/5 
+    print (closingValues)
+    dates = getDates()
+    increment = width/len(dates) 
     connectLines = []
     radius = 5 
     
@@ -53,14 +58,21 @@ def draw(canvas, width, height):
         yPos = height-closingValues[i]
         connectLines.append((xPos,yPos))
     """
-    for i in range(5):
+    canvas.create_rectangle(0,0,width,height,fill="white")
+    for i in range(len(dates)):
         xPos = (i+1)*increment
         yPos = height-closingValues[i]
         connectLines.append((xPos,yPos))
+        canvas.create_text(xPos,height-10,text=dates[i],font="Calibri 5 bold")
     
-    #print (connectLines)
+    yIncrement = height/20
+    for i in range(20):
+        yPos = i*yIncrement
+        val = height-yPos
+        canvas.create_text(20,yPos,text=str(val),font="Calibri 5 bold")
+        
     
-    canvas.create_rectangle(0,0,width,height,fill="white")
+    
     canvas.create_line(connectLines,width=5)
     for point in connectLines:
         canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
@@ -74,7 +86,7 @@ def runDrawing(width=300, height=300):
     root.mainloop()
     print("done!")
 
-runDrawing(400, 200)
+runDrawing(600, 500)
 
 
 
