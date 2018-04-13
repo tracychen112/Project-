@@ -11,17 +11,27 @@ def getClosingValues():
 
     # closing values 
     closingVal  = quandl.get('WIKI/FB.4',rows = 5)
-
+    
+    # Dates 
+    dates = quandl.get('WIKI/FB',rows = 5,column_index=0)
+    #print (dates)
+    print( dates.index)
+    print(len(dates.index))
+    print(dates.index.tolist())
+    
+    for d in dates.index.tolist():
+        #print(d)
+        date = str(d)
+        print (date[:10])
 
     dataHigh = quandl.get('WIKI/FB.2',rows = 5) 
 
     dataLow = quandl.get('WIKI/FB.3',rows = 5)
-    #print(data.index)
-
     # Get numbers of a specific column 
 
     plotClosingVal = []
-    print(closingVal)
+    # CHECK CLOSING VALUES 
+   # print(closingVal)
     for val in closingVal:
         for i in range(len(closingVal[val])):
             plotClosingVal.append((closingVal[val][i]))
@@ -48,7 +58,7 @@ def draw(canvas, width, height):
         yPos = height-closingValues[i]
         connectLines.append((xPos,yPos))
     
-    print (connectLines)
+    #print (connectLines)
     
     canvas.create_rectangle(0,0,width,height,fill="white")
     canvas.create_line(connectLines,width=5)
@@ -74,12 +84,12 @@ runDrawing(400, 200)
 
 
 #print(data)
-#data2 = quandl.get('WIKI/AAPL',limit=1,column_index=3)    # this will get 1949 records
+#data = quandl.get('WIKI/AAPL',limit=1,column_index=3)    # this will get 1949 records
 #print(data2)
 #print(data.head(5))
 #print(data.tail(5))
 #print(data.count())
-
+#print(data.index)
 
 #data = quandl.get("WIKI/TSLA", start_date="2018-03-20", end_date="2018-04-10")
 #print(data.head(5))
