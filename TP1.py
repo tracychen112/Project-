@@ -4,9 +4,15 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
 
+try:
+    # actually correct this part 
+    company = input("Enter stock symbol of a company: ")
+except: 
+    print("ENTER VALID STOCK SYMBOL!")
+
 def getDates():
     # Dates 
-    dates = quandl.get('WIKI/FB',rows = 5)
+    dates = quandl.get('WIKI/'+company,rows = 5)
     #print (dates)
     print( type(dates.index)) # type panda 
     print(len(dates.index))
@@ -25,7 +31,7 @@ def getClosingValues():
     # Graphing closing values:
 
     # closing values 
-    closingVal  = quandl.get('WIKI/FB.4',rows = 5)
+    closingVal  = quandl.get('WIKI/'+company,rows = 5,column_index=4)
 
     dataHigh = quandl.get('WIKI/FB.2',rows = 5) 
 
@@ -47,23 +53,19 @@ def draw(canvas, width, height):
     closingValues = getClosingValues()
     print (closingValues)
     dates = getDates()
-    increment = width/len(dates) 
     connectLines = []
     radius = 5 
-    
-    # temp 
-    """
-    for i in range(2):
-        xPos = (i+1)*increment
-        yPos = height-closingValues[i]
-        connectLines.append((xPos,yPos))
-    """
-    canvas.create_rectangle(0,0,width,height,fill="white")
+    margin = width/10
+    increment = (width-2*margin)/len(dates)
+    print (increment)
+    canvas.create_rectangle(0,0,width,height,fill="light blue")
+    canvas.create_rectangle(margin,margin,width-margin,height-margin,fill="white")
     for i in range(len(dates)):
-        xPos = (i+1)*increment
-        yPos = height-closingValues[i]
+        startingPt = margin/2
+        xPos = i*increment + margin + startingPt
+        yPos = height-margin-closingValues[i]
         connectLines.append((xPos,yPos))
-        canvas.create_text(xPos,height-10,text=dates[i],font="Calibri 5 bold")
+        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 5 bold")
     
     yIncrement = height/20
     for i in range(20):
@@ -71,7 +73,6 @@ def draw(canvas, width, height):
         val = height-yPos
         canvas.create_text(20,yPos,text=str(val),font="Calibri 5 bold")
         
-    
     
     canvas.create_line(connectLines,width=5)
     for point in connectLines:
