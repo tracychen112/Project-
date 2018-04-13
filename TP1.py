@@ -34,13 +34,26 @@ def draw(canvas, width, height):
     closingValues = getClosingValues()
     increment = width/5 
     connectLines = []
+    radius = 5 
+    
+    # temp 
+    """
+    for i in range(2):
+        xPos = (i+1)*increment
+        yPos = height-closingValues[i]
+        connectLines.append((xPos,yPos))
+    """
     for i in range(5):
         xPos = (i+1)*increment
         yPos = height-closingValues[i]
         connectLines.append((xPos,yPos))
+    
     print (connectLines)
+    
     canvas.create_rectangle(0,0,width,height,fill="white")
-    canvas.create_line(connectLines,fill="black")
+    canvas.create_line(connectLines,width=5)
+    for point in connectLines:
+        canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
     
 
 def runDrawing(width=300, height=300):
@@ -49,7 +62,7 @@ def runDrawing(width=300, height=300):
     canvas.pack()
     draw(canvas, width, height)
     root.mainloop()
-    print("bye!")
+    print("done!")
 
 runDrawing(400, 200)
 
