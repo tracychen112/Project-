@@ -25,8 +25,8 @@ class Graph(object):
         self.company = company 
         self.width = width
         self.height = height 
-        self.dates = quandl.get('WIKI/'+company,rows=5)
-        self.close = quandl.get('WIKI/'+self.company,column_index=4)
+        self.dates = quandl.get('WIKI/'+self.company,rows=5)
+        self.close = quandl.get('WIKI/'+self.company,rows=5,column_index=4)
     
     def getDates(self):
         # Dates 
@@ -53,14 +53,17 @@ class Graph(object):
         for val in self.close:
             for i in range(len(self.close[val])):
                 closeVal.append((self.close[val][i]))
+        #print (closeVal)
         return closeVal 
+    
         #print(plotClosingVal)
 
 class Solid(Graph):
     
     def drawSolid(self,canvas):
         closingValues = self.getClosingValues()
-        print (closingValues)
+        #print(closingValues)
+        #print (closingValues)
         dates = self.getDates()
         connectLines = []
         radius = 5 
@@ -74,10 +77,10 @@ class Solid(Graph):
         yBase = startY-startingPt
         minimum = int(min(closingValues))
         # y-axis: values 
-        print(max(closingValues))
-        print(min(closingValues))
+        #print(max(closingValues))
+        #print(min(closingValues))
         yIncrement = (self.height-2*margin)/len(dates)
-        print (yIncrement)
+        #print (yIncrement)
         scale = (max(closingValues)-min(closingValues))/len(dates)
         scale = int(scale)+1
         #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
@@ -91,10 +94,12 @@ class Solid(Graph):
         for i in range(len(dates)):
             xPos = i*increment + margin + startingPt
             yPos = yBase-yIncrement/scale* (closingValues[i]-minimum)
+            print(closingValues[i])
+            print (yPos)
             connectLines.append((xPos,yPos))
-            canvas.create_line(xPos,height-margin,xPos,self.height-7*margin/8)
+            canvas.create_line(xPos,self.height-margin,xPos,self.height-7*margin/8)
             # stack overflow for angle 
-            canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 8 bold",angle=90)    
+            canvas.create_text(xPos,self.height-30,text=dates[i],font="Calibri 8 bold",angle=90)    
         # drawing out lines
         canvas.create_line(connectLines,width=3)
         # draw points 
