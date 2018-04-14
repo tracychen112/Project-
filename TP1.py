@@ -60,27 +60,34 @@ def draw(canvas, width, height):
     canvas.create_rectangle(0,0,width,height,fill="light blue")
     canvas.create_rectangle(margin,margin,width-margin,height-margin,fill="white")
     
-    startingPt = margin/2
-    # x-axis: dates and addpoints 
-    for i in range(len(dates)):
-        xPos = i*increment + margin + startingPt
-        yPos = height-margin-closingValues[i]
-        connectLines.append((xPos,yPos))
-        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 5 bold")
     
+    startY = height-margin
+    startingPt = margin/2
+    yBase = startY-startingPt
+    minimum = int(min(closingValues))
     # y-axis: values 
     print(max(closingValues))
     print(min(closingValues))
     yIncrement = (height-2*margin)/len(dates)
-    startY = height-margin
-    endY = margin
+    print (yIncrement)
+    scale = (max(closingValues)-min(closingValues))/len(dates)
+    scale = int(scale)+1
+    #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
     for i in range(len(dates)):
-        yPos = startY-startingPt-i*yIncrement
-        val = int(min(closingValues)) + i*yIncrement 
+        yPos = yBase-i*yIncrement
+        val = minimum + i*scale
         canvas.create_text(20,yPos,text=str(val),font="Calibri 5 bold")
-        
+
     
+    # x-axis: dates and addpoints 
+    for i in range(len(dates)):
+        xPos = i*increment + margin + startingPt
+        yPos = yBase-yIncrement/scale* (closingValues[i]-minimum)
+        connectLines.append((xPos,yPos))
+        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 5 bold")    
+    # drawing out lines
     canvas.create_line(connectLines,width=5)
+    # draw points 
     for point in connectLines:
         canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
     
