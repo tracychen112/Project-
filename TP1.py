@@ -4,11 +4,10 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
 
-try:
-    # actually correct this part 
-    company = input("Enter stock symbol of a company: ")
-except: 
-    print("ENTER VALID STOCK SYMBOL!")
+
+ 
+company = input("Enter stock symbol of a company: ")
+
 
 def getDates():
     # Dates 
@@ -76,7 +75,8 @@ def draw(canvas, width, height):
     for i in range(len(dates)):
         yPos = yBase-i*yIncrement
         val = minimum + i*scale
-        canvas.create_text(20,yPos,text=str(val),font="Calibri 5 bold")
+        canvas.create_line(7*margin/8,yPos,margin,yPos)
+        canvas.create_text(7*margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
 
     
     # x-axis: dates and addpoints 
@@ -84,9 +84,9 @@ def draw(canvas, width, height):
         xPos = i*increment + margin + startingPt
         yPos = yBase-yIncrement/scale* (closingValues[i]-minimum)
         connectLines.append((xPos,yPos))
-        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 5 bold")    
+        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 10 bold")    
     # drawing out lines
-    canvas.create_line(connectLines,width=5)
+    canvas.create_line(connectLines,width=3)
     # draw points 
     for point in connectLines:
         canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
@@ -101,28 +101,3 @@ def runDrawing(width=300, height=300):
     print("done!")
 
 runDrawing(700, 600)
-
-
-
-
-
-#### MORE QUANDL FEATURES BELOW 
-
-
-#print(data)
-#data = quandl.get('WIKI/AAPL',limit=1,column_index=3)    # this will get 1949 records
-#print(data2)
-#print(data.head(5))
-#print(data.tail(5))
-#print(data.count())
-#print(data.index)
-
-#data = quandl.get("WIKI/TSLA", start_date="2018-03-20", end_date="2018-04-10")
-#print(data.head(5))
-#print(data.tail(5))
-
-""" KNOW HOW TO BULK DOWNLOAD??
-#quandl.bulkdownload(data)
-"""
-
-
