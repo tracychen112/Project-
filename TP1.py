@@ -69,7 +69,7 @@ class Solid(Graph):
         radius = 5 
         margin = self.width/10
         increment = (self.width-2*margin)/len(dates)
-        canvas.create_rectangle(0,0,self.width,self.height,fill="light blue")
+        canvas.create_rectangle(0,0,self.width,self.height,fill="light blue",width=0)
         canvas.create_rectangle(margin,margin,self.width-margin,self.height-margin,fill="white")
     
         startY = self.height-margin
@@ -122,72 +122,78 @@ class CandleStick(Graph):
         self.minimum = None 
         self.dates = self.getDates()
         self.yIncrement = (self.height-2*self.margin)/len(self.dates)
-        # to get range:
-        self.minVal = 0
-        self.maxVal = 0 
-        scale = (self.maxVal-self.minVal)/len(self.dates)
-        self.scale = int(scale)+1
         self.increment = (self.width-2*self.margin)/len(self.dates)
         
-    def getLowValues(self):
+    def getScale(self):
         lowVal = []
         for val in self.low:
             for i in range(len(self.low[val])):
                 lowVal.append(self.low[val][i])
-        print(lowVal)
         self.minVal = min(lowVal)
         self.minimum = int(self.minVal)
-        print(self.minVal)
-        print(self.minimum)
-        for val in self.low:
-            for i in range(len(self.low[val])):
-                value = self.low[val][i]
-                newVal = self.yIncrement/self.scale * (value-self.minimum)
-                self.convertLow.append(newVal)
-        
-    def getHighValues(self):
         highVal = []
         for val in self.high:
             for i in range(len(self.high[val])):
                 highVal.append(self.high[val][i])
         self.maxVal = max(highVal)
+        scale = (self.maxVal-self.minVal)/len(self.dates)
+        self.scale = int(scale)+1
+        print(self.maxVal,self.minVal,self.minimum)
+        print('low',lowVal)
+        print('high',highVal)
+        print('scale',self.scale)
+        
+    def getLowValues(self):
+        for val in self.low:
+            for i in range(len(self.low[val])):
+                value = self.low[val][i]
+                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
+                self.convertLow.append(newVal)
+        print('converted low',self.convertLow)
+        
+    def getHighValues(self):
         for val in self.high:
             for i in range(len(self.high[val])):
                 value = self.high[val][i]
-                newVal = self.yIncrement/self.scale * (value-self.minimum)
+                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
                 self.convertHigh.append(newVal)
         
     def getOpenValues(self):
         for val in self.open:
             for i in range(len(self.open[val])):
                 value = self.open[val][i]
-                newVal = self.yIncrement/self.scale * (value-self.minimum)
+                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
                 self.convertOpen.append(newVal)
 
     def getCloseValues(self):
         for val in self.close:
             for i in range(len(self.close[val])):
                 value = self.close[val][i]
-                newVal = self.yIncrement/self.scale * (value-self.minimum)
+                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
                 self.convertClose.append(newVal)
         
     
     def drawCandleStick(self,canvas):
     
-        canvas.create_rectangle(0,0,self.width,self.height,fill="light green")
+        canvas.create_rectangle(0,0,self.width,self.height,fill="light green",width=0)
         canvas.create_rectangle(self.margin,self.margin,self.width-self.margin,self.height-self.margin,fill="white")
         
         for i in range(len(self.dates)):
             xPos = i*self.increment + self.margin + self.startingPt
-            # high and low plot 
+            # high and low plot
+            # values are FLIPPED-higher-means low, lower means high 
             if self.convertClose[i]>self.convertOpen[i]:
                 bottom = self.convertClose[i]
                 top = self.convertOpen[i]
+                color = 'red'
             else:
                 bottom = self.convertOpen[i]
                 top = self.convertClose[i]
+                color = 'white'
             canvas.create_line(xPos,self.convertHigh[i],xPos,top)
             canvas.create_line(xPos,self.convertLow[i],xPos,bottom)
+            canvas.create_rectangle(xPos-5,top,xPos+5,bottom,fill=color)
+            # markers on x-axis 
             canvas.create_line(xPos,self.height-self.margin,xPos,self.height-7*self.margin/8)
             # stack overflow for angle 
             canvas.create_text(xPos,self.height-30,text=self.dates[i],font="Calibri 8 bold",angle=90) 
@@ -315,6 +321,7 @@ def redrawAll(canvas, data):
         Cover.draw(canvas,data.width,data.height)
     elif data.drawCandle:
         candle = CandleStick('FB',data.width,data.height)
+        candle.getScale()
         candle.getLowValues()
         candle.getHighValues()
         candle.getOpenValues()
