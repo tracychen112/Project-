@@ -5,16 +5,101 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
 
 
-company = input("Enter stock symbol of a company: ")
+
+
+class Cover(object):
+    
+    def __init__(self,width,height):
+        self.width = width
+        self.height = height 
+    
+    @staticmethod
+    def draw(canvas,width,height):
+        canvas.create_rectangle(0,0,width,height,fill="light pink")
+        pass 
+        
+    
 
 class Graph(object):
-    def __init__(self,company):
+    def __init__(self,company,width,height):
         self.company = company 
+        self.width = width
+        self.height = height 
         self.dates = quandl.get('WIKI/'+company,rows=5)
-        
+        self.close = quandl.get('WIKI/'+self.company,column_index=4)
+    
+    def getDates(self):
+        # Dates 
+        dates = quandl.get('WIKI/'+self.company,rows = 5)
+        #print (dates)
+        #print( type(dates.index)) # type panda 
+        #print(len(dates.index))
+        # stack overflow for syntax tolist 
+        #print(dates.index.tolist())
+        datesLst = []
+        for d in dates.index.tolist():
+            #print(d)
+            date = str(d)
+            datesLst.append((date[:10]))
+        return datesLst
 
+    def getClosingValues(self):
+        # Graphing closing values:
+        # closing values 
+        # Get numbers of a specific column 
+        closeVal = []
+        # CHECK CLOSING VALUES 
+        # print(closingVal)
+        for val in self.close:
+            for i in range(len(self.close[val])):
+                closeVal.append((self.close[val][i]))
+        return closeVal 
+        #print(plotClosingVal)
 
 class Solid(Graph):
+    
+    def drawSolid(self,canvas):
+        closingValues = self.getClosingValues()
+        print (closingValues)
+        dates = self.getDates()
+        connectLines = []
+        radius = 5 
+        margin = self.width/10
+        increment = (self.width-2*margin)/len(dates)
+        canvas.create_rectangle(0,0,self.width,self.height,fill="light blue")
+        canvas.create_rectangle(margin,margin,self.width-margin,self.height-margin,fill="white")
+    
+        startY = self.height-margin
+        startingPt = margin/2
+        yBase = startY-startingPt
+        minimum = int(min(closingValues))
+        # y-axis: values 
+        print(max(closingValues))
+        print(min(closingValues))
+        yIncrement = (self.height-2*margin)/len(dates)
+        print (yIncrement)
+        scale = (max(closingValues)-min(closingValues))/len(dates)
+        scale = int(scale)+1
+        #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
+        for i in range(len(dates)):
+            yPos = yBase-i*yIncrement
+            val = minimum + i*scale
+            canvas.create_line(7*margin/8,yPos,margin,yPos)
+            canvas.create_text(7*margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
+    
+        # x-axis: dates and addpoints 
+        for i in range(len(dates)):
+            xPos = i*increment + margin + startingPt
+            yPos = yBase-yIncrement/scale* (closingValues[i]-minimum)
+            connectLines.append((xPos,yPos))
+            canvas.create_line(xPos,height-margin,xPos,self.height-7*margin/8)
+            # stack overflow for angle 
+            canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 8 bold",angle=90)    
+        # drawing out lines
+        canvas.create_line(connectLines,width=3)
+        # draw points 
+        for point in connectLines:
+            canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
                 
             
 class CandleStick(Graph):
@@ -23,8 +108,7 @@ class CandleStick(Graph):
         self.open = quandl.get('WIKI/'+self.company,column_index=1)
         self.high = quandl.get('WIKI/'+self.company,column_index=2)
         self.low = quandl.get('WIKI/'+self.company,column_index=3)
-        # may delete this for inheritance 
-        self.close = quandl.get('WIKI/'+self.company,column_index=4)
+        
         
     def getLowValues(self):
         lowVal = []
@@ -48,16 +132,8 @@ class CandleStick(Graph):
                 openVal.append((self.open[val][i]))
         return lowVal
     
-    # from inheritance may delete this later 
-    def getClosingValues(self):
-        closeVal = []
-        for val in self.close:
-            for i in range(len(self.close[val])):
-                openVal.append((self.close[val][i]))
-        return closeVal
-    
-    def draw(self,canvas):
-        
+    def drawCandleStick(self,canvas):
+        pass 
         
             
         
@@ -161,19 +237,40 @@ def runDrawing(width=300, height=300):
 
 ## 112 website template 
 def init(data):
-    self.startState = True 
-    self.drawCandle = False 
-    self.drawSolidLine = False 
+    data.startState = True 
+    data.drawCandle = False 
+    data.drawSolidLine = False 
+    data.width = 700
+    data.height = 600 
     pass 
 
 def mousePressed(event, data):
     pass 
 
 def redrawAll(canvas, data):
-    pass 
+    if data.startState:
+        Cover.draw(canvas,data.width,data.height)
+    elif data.drawCandle:
+        candle = CandleStick('FB',data.width,data.height)
+        candle.drawCandleStick(canvas)
+    elif data.drawSolidLine:
+        line = Solid('FB',data.width,data.height)
+        line.drawSolid(canvas)
+        
 
 def keyPressed(event, data):
-    pass
+    if event.keysym=="c":
+        data.candleStick= True 
+        data.startState = False
+        data.drawSolidLine = False
+    elif event.keysym=="s":
+        data.candleStick= False 
+        data.startState = False
+        data.drawSolidLine = True 
+    elif event.keysym=="b":
+        data.candleStick= False
+        data.startState = True 
+        data.drawSolidLine = False
 
 def timerFired(data):
     pass 
@@ -224,5 +321,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(400, 200)
-runDrawing(700, 600)
+run(700, 600)
