@@ -84,7 +84,8 @@ def draw(canvas, width, height):
         xPos = i*increment + margin + startingPt
         yPos = yBase-yIncrement/scale* (closingValues[i]-minimum)
         connectLines.append((xPos,yPos))
-        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 10 bold")    
+        canvas.create_line(xPos,height-margin,xPos,height-7*margin/8)
+        canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 8 bold")    
     # drawing out lines
     canvas.create_line(connectLines,width=3)
     # draw points 
