@@ -57,20 +57,26 @@ def draw(canvas, width, height):
     radius = 5 
     margin = width/10
     increment = (width-2*margin)/len(dates)
-    print (increment)
     canvas.create_rectangle(0,0,width,height,fill="light blue")
     canvas.create_rectangle(margin,margin,width-margin,height-margin,fill="white")
+    
+    startingPt = margin/2
+    # x-axis: dates and addpoints 
     for i in range(len(dates)):
-        startingPt = margin/2
         xPos = i*increment + margin + startingPt
         yPos = height-margin-closingValues[i]
         connectLines.append((xPos,yPos))
         canvas.create_text(xPos,height-30,text=dates[i],font="Calibri 5 bold")
     
-    yIncrement = height/20
-    for i in range(20):
-        yPos = i*yIncrement
-        val = height-yPos
+    # y-axis: values 
+    print(max(closingValues))
+    print(min(closingValues))
+    yIncrement = (height-2*margin)/len(dates)
+    startY = height-margin
+    endY = margin
+    for i in range(len(dates)):
+        yPos = startY-startingPt-i*yIncrement
+        val = int(min(closingValues)) + i*yIncrement 
         canvas.create_text(20,yPos,text=str(val),font="Calibri 5 bold")
         
     
@@ -87,7 +93,7 @@ def runDrawing(width=300, height=300):
     root.mainloop()
     print("done!")
 
-runDrawing(600, 500)
+runDrawing(700, 600)
 
 
 
