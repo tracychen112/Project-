@@ -82,9 +82,6 @@ def rootMeanSquareError(predicted,actual):
         difference+=(predicted[0]-actual[0])**2
     rmse = math.sqrt(difference/m)
     return rmse 
-    
-
-
 
 
       
