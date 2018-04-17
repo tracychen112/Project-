@@ -108,7 +108,9 @@ class Solid(Graph):
             canvas.create_text(7*margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
     
         # x-axis: dates and addpoints 
-        for i in range(len(self.displayDates)-1):
+        print('num predict',self.numPredictedVal)
+        print('dates',self.solidCloseValues)
+        for i in range(len(self.displayDates)):
             xPos = i*increment + margin + startingPt
             yPos = yBase-yIncrement/scale* (self.solidCloseValues[i]-minimum)
             if i==self.numOrigVal-1:
@@ -120,21 +122,21 @@ class Solid(Graph):
                 connectLines.append((xPos,yPos))
             canvas.create_line(xPos,self.height-margin,xPos,self.height-7*margin/8)
             # stack overflow for angle 
-            canvas.create_text(xPos,self.height-30,text=self.displayDates[i],font="Calibri 8 bold",angle=90)    
-        # drawing out lines
+            canvas.create_text(xPos,self.height-30,text=self.displayDates[i],font="Calibri 8 bold",angle=90) 
         
-        # draw predicted first 
-        if len(newLines)!=0:
+        # draw predicted  
+        if len(newLines)>1:
             canvas.create_line(newLines,width=3,fill="purple")
             for i in range(len(newLines)):
                 if i!=0:
                     point = newLines[i]
                     canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="pink")
-        # draw past values
-        canvas.create_line(connectLines,width=3) 
+        
+        # drawing past lines and points
+        canvas.create_line(connectLines,width=3)
         for point in connectLines:
             canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
-        print (newLines)
+        
         
                 
             
