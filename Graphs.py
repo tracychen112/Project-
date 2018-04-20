@@ -1,4 +1,5 @@
 from tkinter import *  
+import string 
 import quandl
 import RegressionModel 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
@@ -41,17 +42,12 @@ class Option(object):
     def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light grey",width=0)
         canvas.create_text(width/2,height/5,text="Enter a stock",font="Dubai 20")
-        canvas.create_rectangle(width/8,height*4/10,width*7/8,height*6/10,fill="white")
-        canvas.create_text(width/2,height,3,text=Option.word,font="Dubai 20",fill="black")
-        
-    @staticmethod
-    def enterText(letter):
-        Option.word+=letter 
-        
-    @staticmethod    
-    def deleteText():
-        if len(Option.word)!=0:
-            Option.word=Option.word[:-1]
+        canvas.create_rectangle(width/8,height*3/10,width*7/8,height*5/10,fill="white")
+        canvas.create_text(width/2,height/2,text=Option.word,font="Dubai 20",fill="black")
+        canvas.create_rectangle(4*width/10,6*height/10,6*width/10,height*8/10,fill="light green")
+        # write visualize or go?
+        canvas.create_text(width/2,height*7/10,text="GO",font="Dubai 20",fill="black")
+    
         
         
 
@@ -290,14 +286,36 @@ def init(data):
     data.drawPredicted = False 
     data.menu = False 
     data.enterStock = False 
+    data.userCandle = False 
+    data.userLine = False 
 
 
 def mousePressed(event, data):
     if data.menu:
-        xPos = event.x 
-        yPos = event.y
-        if data.width/8<=xPos<=4*data.width/9 and 3*data.height/8<=yPos<=7*data.height/8:
-            data.enterStock = True 
+        if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
+            yPos = event.y
+            data.enterStock = True
+            if 3*data.height/8<=yPos<5*data.height/8:
+                data.drawCandle = True 
+                data.drawSolidLine = False 
+            else:
+                data.drawCandle= False
+                data.drawSolidLine = True 
+    elif data.enterStock:
+        if 4*data.width/10<=event.x<=6*data.width/10 and 6*data.height/10<=event.y<=data.height*8/10:
+            if data.drawCandle:
+                data.candle = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
+                data.candle.getScale()
+                data.candle.getLowValues()
+                data.candle.getHighValues()
+                data.candle.getOpenValues()
+                data.candle.getCloseValues()
+            elif data.drawSolidLine:
+                data.line = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
+                data.line.getClosingValues()
+                data.line.getDates()
+            Option.word=""
+            data.enterStock=False 
             
             
             
@@ -309,15 +327,15 @@ def redrawAll(canvas, data):
         Menu.draw(canvas,data.width,data.height)
         if data.enterStock:
             Option.draw(canvas,data.width,data.height)
-    elif data.drawCandle:
+    elif data.enterStock==False and data.drawCandle==True:
         candle = CandleStick('FB',data.width,data.height,5)
-        candle.getScale()
+        candle.getScale()   # delete this later 
         candle.getLowValues()
         candle.getHighValues()
         candle.getOpenValues()
         candle.getCloseValues()
         candle.drawCandleStick(canvas)
-    elif data.drawSolidLine:
+    elif data.enterStock==False and data.drawSolidLine==True:
         line = Solid('FB',data.width,data.height,5)
         line.getClosingValues()
         line.getDates()
@@ -340,6 +358,7 @@ def keyPressed(event, data):
         data.drawCandle= True 
         data.startState = False
         data.drawSolidLine = False
+    # no more of this-- use button 
     elif event.keysym=="space":
         data.menu = True 
         data.drawCandle= False  
@@ -355,16 +374,15 @@ def keyPressed(event, data):
         data.drawSolidLine = False
     elif event.keysym=="p":
         data.drawPredicted = not data.drawPredicted 
-        
+       
     if data.enterStock:
         letter = event.keysym
-        if letter=="BackSpace":
-            Option.deleteText()
-        elif letter in string.ascii_letters:
-            letter.upper() 
-            print(letter)
-            Option.enterText(letter)
-            
+        if letter=="BackSpace" and len(Option.word)>0:
+            Option.word=Option.word[:-1]
+        elif letter in string.ascii_letters and len(Option.word)<10:
+            Option.word+=letter.upper()
+    
+         
 def timerFired(data):
     pass 
 
