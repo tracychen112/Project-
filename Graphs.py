@@ -1,4 +1,4 @@
-from tkinter import *
+from tkinter import *  
 import quandl
 import RegressionModel 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
@@ -10,16 +10,35 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 
 class Cover(object):
     
-    def __init__(self,width,height):
-        self.width = width
-        self.height = height 
-    
     @staticmethod
     def draw(canvas,width,height):
-        canvas.create_rectangle(0,0,width,height,fill="light pink")
-        pass 
+        canvas.create_rectangle(0,0,width,height,fill="lavender",width=0)
+        canvas.create_text(width/2,height/3,text="iStockUp",font="Dubai 50",fill="black")
+        # Dubai, Gigi
         
-    
+class Menu(object):
+    @staticmethod
+    def draw(canvas,width,height):
+        canvas.create_rectangle(0,0,width,height,fill="light yellow",width=0)
+        canvas.create_text(width/2,height/10,text="Menu",font="Dubai 50",fill="black")
+        # View graphs 
+        canvas.create_rectangle(width/8,3*height/8,4*width/9,5*height/8,fill="white")
+        canvas.create_rectangle(width/8,5*height/8,4*width/9,7*height/8,fill="white")
+        # View earnings/portfolio 
+        canvas.create_text(103*width/144,2*height/7,text="My Earnings",font="Dubai 35",fill="black")
+        canvas.create_rectangle(5*width/9,3*height/8,7*width/8,7*height/8,fill="white")
+        # canvas.create_image(103*width/144,5*height/8,image="piggyBank.jpg")
+        # text for graphs 
+        canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
+        canvas.create_text(41*width/144,4*height/8,text="Candlestick",font="Dubai 15",fill="black")
+        canvas.create_text(41*width/144,6*height/8,text="Solid Line",font="Dubai 15",fill="black")
+
+
+
+class Portfolio(object):
+    # 
+    pass 
+
 
 class Graph(object):
     def __init__(self,company,width,height,num):
@@ -248,14 +267,20 @@ def init(data):
     data.width = 700
     data.height = 600 
     data.drawPredicted = False 
-    pass 
+    data.menu = False 
+
 
 def mousePressed(event, data):
-    pass 
+    if data.menu:
+        xPos = event.x 
+        yPos = event.y
+        if data.width/8<=xPos<=4*data.width/9 and 3*data.height/8<=yPos<=7*data.height/8:
 
 def redrawAll(canvas, data):
     if data.startState:
         Cover.draw(canvas,data.width,data.height)
+    elif data.menu:
+        Menu.draw(canvas,data.width,data.height)
     elif data.drawCandle:
         candle = CandleStick('FB',data.width,data.height,5)
         candle.getScale()
@@ -285,6 +310,11 @@ def redrawAll(canvas, data):
 def keyPressed(event, data):
     if event.keysym=="c":
         data.drawCandle= True 
+        data.startState = False
+        data.drawSolidLine = False
+    elif event.keysym=="space":
+        data.menu = True 
+        data.drawCandle= False  
         data.startState = False
         data.drawSolidLine = False
     elif event.keysym=="s":
@@ -347,5 +377,7 @@ def run(width=300, height=300):
     # and launch the app
     root.mainloop()  # blocks until window is closed
     print("bye!")
+
+
 
 run(700, 600)
