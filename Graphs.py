@@ -37,16 +37,36 @@ class Menu(object):
 # ISSUE WITH ENTRIES !!!     
 class Option(object):
     word = ""
+    startMonth = ""
+    startDay = ""
+    startYr = ""
+    endMonth = ""
+    endDay = ""
+    endYr = ""
 
     @staticmethod
     def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light grey",width=0)
+        # stock name 
         canvas.create_text(width/2,height/5,text="Enter a stock",font="Dubai 20")
-        canvas.create_rectangle(width/8,height*3/10,width*7/8,height*5/10,fill="white")
+        canvas.create_rectangle(width/8,2.5*height/10,width*7/8,height*3.5/10,fill="white")
+        # dates 
+        canvas.create_text(width*2/8,height*5/10,text="Starting Date",font = "Dubai 20",fill="black")
+        canvas.create_text(width*6/8,height*5/10,text="Ending Date",font = "Dubai 20",fill="black")
+        #start date boxes 
+        canvas.create_rectangle(width*2/20,height*11/20,width*3.5/20,height*13/20,fill="white")
+        canvas.create_rectangle(width*4/20,height*11/20,width*5.5/20,height*13/20,fill="white")
+        canvas.create_rectangle(width*6/20,height*11/20,width*9/20,height*13/20,fill="white")
+        #end date boxes 
+        canvas.create_rectangle(width*11/20,height*11/20,width*12.5/20,height*13/20,fill="white")
+        canvas.create_rectangle(width*13/20,height*11/20,width*14.5/20,height*13/20,fill="white")
+        canvas.create_rectangle(width*15/20,height*11/20,width*18/20,height*13/20,fill="white")
+        
         canvas.create_text(width/2,height/2,text=Option.word,font="Dubai 20",fill="black")
-        canvas.create_rectangle(4*width/10,6*height/10,6*width/10,height*8/10,fill="light green")
+        
         # write visualize or go?
-        canvas.create_text(width/2,height*7/10,text="GO",font="Dubai 20",fill="black")
+        canvas.create_rectangle(4*width/10,14*height/20,6*width/10,height*17/20,fill="light green")
+        canvas.create_text(width/2,height*15.5/20,text="GO",font="Dubai 20",fill="black")
     
         
         
@@ -302,7 +322,9 @@ def mousePressed(event, data):
                 data.drawCandle= False
                 data.drawSolidLine = True 
     elif data.enterStock:
-        if 4*data.width/10<=event.x<=6*data.width/10 and 6*data.height/10<=event.y<=data.height*8/10:
+        if width/8<=event.x<=width*7/8 and height/10<=event.y<=height*2/10:
+            pass 
+        elif 4*data.width/10<=event.x<=6*data.width/10 and 6*data.height/10<=event.y<=data.height*8/10:
             if data.drawCandle:
                 data.candle = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
                 data.candle.getScale()
