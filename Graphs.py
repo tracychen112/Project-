@@ -56,6 +56,7 @@ class Option(object):
         canvas.create_rectangle(width*4/20,height*11/20,width*5.5/20,height*13/20,fill="white")
         canvas.create_rectangle(width*6/20,height*11/20,width*9/20,height*13/20,fill="white")
         # text for date 
+        print (Option.startMonth)
         canvas.create_text(width*2.75/20,height*12/20,text=Option.startMonth,font = "Dubai 10",fill="black")
         canvas.create_text(width*4.75/20,height*12/20,text=Option.startDay,font = "Dubai 10",fill="black")
         canvas.create_text(width*7.5/20,height*12/20,text=Option.startYear,font = "Dubai 10",fill="black")
@@ -311,37 +312,73 @@ def init(data):
     data.drawPredicted = False 
     data.menu = False 
     data.enterStock = False 
-    data.userCandle = False 
-    data.userLine = False 
+    # entering options 
+    data.startMonth = False 
+    data.startDay = False
+    data.startYear = False
+    data.endMonth = False
+    data.endDay = False
+    data.endYear = False
+    data.stockName = False
+    
 
 
 def mousePressed(event, data):
     if data.menu:
         if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
-            yPos = event.y
-            data.enterStock = True
-            if 3*data.height/8<=yPos<5*data.height/8:
-                data.drawCandle = True 
-                data.drawSolidLine = False 
-            else:
-                data.drawCandle= False
-                data.drawSolidLine = True 
+            data.enterStock=True 
+            data.menu = False 
     elif data.enterStock:
-        if width/8<=event.x<=width*7/8 and height/10<=event.y<=height*2/10:
-            pass 
-        elif 4*data.width/10<=event.x<=6*data.width/10 and 6*data.height/10<=event.y<=data.height*8/10:
-            if data.drawCandle:
-                data.candle = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
-                data.candle.getScale()
-                data.candle.getLowValues()
-                data.candle.getHighValues()
-                data.candle.getOpenValues()
-                data.candle.getCloseValues()
-            elif data.drawSolidLine:
-                data.line = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
-                data.line.getClosingValues()
-                data.line.getDates()
-            Option.word=""
+        if data.width/8<=event.x<=data.width*7/8 and data.height*2.5/10<=event.y<=data.width*3.5/10:
+            Option.word = ""
+            data.stockName = True
+            data.startDay,data.startYear,data.endMonth=False,False,False 
+            data.endDay,data.endYear,data.startMonth = False,False,False
+        if data.width*2/20<=event.x<=data.width*3.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+            Option.startMonth = ""
+            data.startMonth = True 
+            data.startDay,data.startYear,data.endMonth=False,False,False 
+            data.endDay,data.endYear,data.stockName = False,False,False  
+        elif data.width*4/20<=event.x<=data.width*5.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+            Option.startDay = "" 
+            data.startDay = True 
+            data.startMonth,data.startYear,data.endMonth=False,False,False 
+            data.endDay,data.endYear,data.stockName = False,False,False       
+        elif data.width*6/20<=event.x<=data.width*9/20 and data.height*11/20<=event.y<=data.height*13/20:
+            Option.startYear="" 
+            data.startYear = True 
+            data.startDay,data.startMonth,data.endMonth=False,False,False 
+            data.endDay,data.endYear,data.stockName = False,False,False
+        elif data.width*11/20<=event.x<=data.width*12.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+            Option.endMonth = "" 
+            data.endMonth = True 
+            data.startDay,data.startYear,data.startMonth=False,False,False 
+            data.endDay,data.endYear,data.stockName = False,False,False
+        elif data.width*13/20<=event.x<=data.width*14.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+            Option.endDay = ""
+            data.endDay = True 
+            data.startDay,data.startYear,data.endMonth=False,False,False 
+            data.startMonth,data.endYear,data.stockName = False,False,False
+        elif data.width*15/20<=event.x<=data.width*18/20 and data.height*11/20<=event.y<=data.height*13/20:    
+            Option.endYear = ""
+            data.endYear = True 
+            data.startDay,data.startYear,data.endMonth=False,False,False 
+            data.endDay,data.startMonth,data.stockName = False,False,False
+        # buttons 
+        elif data.width*1.5/10<=event.x<=data.width*3.5/10 and data.height*11/20<=event.y<=data.height*17/20:
+            data.drawCandle=True 
+            data.candle = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
+            data.candle.getScale()
+            data.candle.getLowValues()
+            data.candle.getHighValues()
+            data.candle.getOpenValues()
+            data.candle.getCloseValues()
+            data.enterStock=False
+        elif data.width*6.5<=event.x<=data.width*8.5/10 and data.height*14/20<=event.y<=data.height*17/20:
+            data.drawSolidLine=True 
+            data.line = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
+            data.line.getClosingValues()
+            data.line.getDates()                
             data.enterStock=False 
             
             
@@ -352,8 +389,8 @@ def redrawAll(canvas, data):
         Cover.draw(canvas,data.width,data.height)
     elif data.menu:
         Menu.draw(canvas,data.width,data.height)
-        if data.enterStock:
-            Option.draw(canvas,data.width,data.height)
+    elif data.enterStock:
+        Option.draw(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
         candle = CandleStick('FB',data.width,data.height,5)
         candle.getScale()   # delete this later 
@@ -404,10 +441,49 @@ def keyPressed(event, data):
        
     if data.enterStock:
         letter = event.keysym
+        controlInput(data,letter)
+        
+
+def controlInput(data,letter):
+    if data.stockName:
         if letter=="BackSpace" and len(Option.word)>0:
             Option.word=Option.word[:-1]
         elif letter in string.ascii_letters and len(Option.word)<10:
             Option.word+=letter.upper()
+    elif data.startMonth:
+        if letter=="BackSpace" and len(Option.startMonth)>0:
+            Option.startMonth=Option.startMonth[:-1]
+        elif letter in string.digits and len(Option.startMonth)<2:
+            print ('hi')
+            Option.startMonth+=letter
+    elif data.startDay:
+        if letter=="BackSpace" and len(Option.startDay)>0:
+            Option.startDay=Option.startDay[:-1]
+        elif letter in string.ascii_letters and len(Option.startDay)<3:
+            Option.startDay+=letter
+    elif data.startYear:
+        if letter=="BackSpace" and len(Option.startYear)>0:
+            Option.startYear=Option.startYear[:-1]
+        elif letter in string.ascii_letters and len(Option.startYear)<5:
+            Option.startYear+=letter
+    elif data.endMonth:
+        if letter=="BackSpace" and len(Option.endMonth)>0:
+            Option.endMonth=Option.endMonth[:-1]
+        elif letter in string.ascii_letters and len(Option.endMonth)<3:
+            Option.endMonth+=letter
+    elif data.endDay:
+        if letter=="BackSpace" and len(Option.endDay)>0:
+            Option.endDay=Option.endDay[:-1]
+        elif letter in string.ascii_letters and len(Option.endDay)<3:
+            Option.endDay+=letter
+    elif data.endYear:
+        if letter=="BackSpace" and len(Option.endYear)>0:
+            Option.endYear=Option.endYear[:-1]
+        elif letter in string.ascii_letters and len(Option.endYear)<5:
+            Option.endYear+=letter
+
+    
+    
     
          
 def timerFired(data):
