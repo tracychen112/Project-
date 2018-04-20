@@ -8,7 +8,6 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 
 
 
-
 class Cover(object):
 
     @staticmethod
@@ -31,7 +30,7 @@ class Menu(object):
         # text for graphs 
         canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
 
-# ISSUE WITH ENTRIES !!!     
+     
 class Option(object):
     word = ""
     startMonth = "month"
@@ -82,13 +81,12 @@ class Portfolio(object):
 
 
 class Graph(object):
-    def __init__(self,company,width,height,num):
+    def __init__(self,company,width,height,startDate,endDate):
         self.company = company 
         self.width = width
         self.height = height 
-        self.rows = num
-        self.dates = quandl.get('WIKI/'+self.company,rows=num)
-        self.close = quandl.get('WIKI/'+self.company,rows=num,column_index=4)
+        self.dates = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate)
+        self.close = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate,column_index=4)
         self.displayDates = []
         self.solidCloseValues = []
         self.numOrigVal = 0
@@ -97,16 +95,16 @@ class Graph(object):
     # rows and number more to be predicted 
     def getDates(self):
         # Dates 
-        dates = quandl.get('WIKI/'+self.company,rows=5)
+        
         #print (dates)
         #print (dates)
         #print( type(dates.index)) # type panda 
         #print(len(dates.index))
         # stack overflow for syntax tolist 
         #print(dates.index.tolist())
-        print(self.displayDates)
-        print (len(dates.index.tolist()))
-        for d in dates.index.tolist():
+        #print(self.displayDates)
+        #print (len(dates.index.tolist()))
+        for d in self.dates.index.tolist():
             date = str(d)
             #print(date[:10])
             self.displayDates.append((date[:10]))
@@ -116,7 +114,7 @@ class Graph(object):
     def addDates(self,predicted):
         for prediction in predicted:
             self.displayDates.append(prediction[0])
-            print (self.displayDates)
+            #print (self.displayDates)
     
     def getClosingValues(self):
         # Graphing closing values:
@@ -144,9 +142,10 @@ class Solid(Graph):
         #print (closingValues)
         connectLines = []
         newLines = []
-        radius = 5 
-        margin = self.width/10
+        radius = 3
+        margin = self.width/7
         increment = (self.width-2*margin)/len(self.displayDates)
+        # background 
         canvas.create_rectangle(0,0,self.width,self.height,fill="light blue",width=0)
         canvas.create_rectangle(margin,margin,self.width-margin,self.height-margin,fill="white")
         startY = self.height-margin
@@ -166,10 +165,17 @@ class Solid(Graph):
             val = minimum + i*scale
             canvas.create_line(7*margin/8,yPos,margin,yPos)
             canvas.create_text(7*margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
+        
+        # draw dates
+        if self.displayDates[0][:4]!=self.displayDates[-1][:4]:
+            dateTxt = "Years: " + self.displayDates[0][:4] + "-" + self.displayDates[-1][:4]
+        else: 
+            dateTxt = "Year: " + self.displayDates[0][:4]
+        canvas.create_text(1.5*margin,margin-10,text= dateTxt,font="Dubai 15")
     
         # x-axis: dates and addpoints 
-        print('num predict',self.numPredictedVal)
-        print('dates',self.solidCloseValues)
+       # print('num predict',self.numPredictedVal)
+       # print('dates',self.solidCloseValues)
         for i in range(len(self.displayDates)):
             xPos = i*increment + margin + startingPt
             yPos = yBase-yIncrement/scale* (self.solidCloseValues[i]-minimum)
@@ -182,7 +188,11 @@ class Solid(Graph):
                 connectLines.append((xPos,yPos))
             canvas.create_line(xPos,self.height-margin,xPos,self.height-7*margin/8)
             # stack overflow for angle 
-            canvas.create_text(xPos,self.height-30,text=self.displayDates[i],font="Calibri 8 bold",angle=90) 
+            if self.displayDates[i][5]=="0":
+                txt = self.displayDates[i][6:]
+            else:
+                txt = self.displayDates[i][5:]
+            canvas.create_text(xPos,self.height-50,text=txt,font="Calibri 8 bold",angle=90) 
         
         # draw predicted  
         if len(newLines)>1:
@@ -202,11 +212,11 @@ class Solid(Graph):
                 
             
 class CandleStick(Graph):
-    def __init__(self,company,width,height,num):
-        super().__init__(company,width,height,num)
-        self.open = quandl.get('WIKI/'+self.company,column_index=1,rows=num)
-        self.high = quandl.get('WIKI/'+self.company,column_index=2,rows=num)
-        self.low = quandl.get('WIKI/'+self.company,column_index=3,rows=num)
+    def __init__(self,company,width,height,startDate,endDate):
+        super().__init__(company,width,height,startDate,endDate)
+        self.open = quandl.get('WIKI/'+self.company,column_index=1)
+        self.high = quandl.get('WIKI/'+self.company,column_index=2)
+        self.low = quandl.get('WIKI/'+self.company,column_index=3)
         self.convertOpen = []
         self.convertHigh = []
         self.convertLow = []
@@ -338,48 +348,76 @@ def mousePressed(event, data):
             data.startMonth = True 
             data.startDay,data.startYear,data.endMonth=False,False,False 
             data.endDay,data.endYear,data.stockName = False,False,False  
-        elif data.width*4/20<=event.x<=data.width*5.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+        if data.width*4/20<=event.x<=data.width*5.5/20 and data.height*11/20<=event.y<=data.height*13/20:
             Option.startDay = "" 
             data.startDay = True 
             data.startMonth,data.startYear,data.endMonth=False,False,False 
             data.endDay,data.endYear,data.stockName = False,False,False       
-        elif data.width*6/20<=event.x<=data.width*9/20 and data.height*11/20<=event.y<=data.height*13/20:
+        if data.width*6/20<=event.x<=data.width*9/20 and data.height*11/20<=event.y<=data.height*13/20:
             Option.startYear="" 
             data.startYear = True 
             data.startDay,data.startMonth,data.endMonth=False,False,False 
             data.endDay,data.endYear,data.stockName = False,False,False
-        elif data.width*11/20<=event.x<=data.width*12.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+        if data.width*11/20<=event.x<=data.width*12.5/20 and data.height*11/20<=event.y<=data.height*13/20:
             Option.endMonth = "" 
             data.endMonth = True 
             data.startDay,data.startYear,data.startMonth=False,False,False 
             data.endDay,data.endYear,data.stockName = False,False,False
-        elif data.width*13/20<=event.x<=data.width*14.5/20 and data.height*11/20<=event.y<=data.height*13/20:
+        if data.width*13/20<=event.x<=data.width*14.5/20 and data.height*11/20<=event.y<=data.height*13/20:
             Option.endDay = ""
             data.endDay = True 
             data.startDay,data.startYear,data.endMonth=False,False,False 
             data.startMonth,data.endYear,data.stockName = False,False,False
-        elif data.width*15/20<=event.x<=data.width*18/20 and data.height*11/20<=event.y<=data.height*13/20:    
+        if data.width*15/20<=event.x<=data.width*18/20 and data.height*11/20<=event.y<=data.height*13/20:    
             Option.endYear = ""
             data.endYear = True 
             data.startDay,data.startYear,data.endMonth=False,False,False 
             data.endDay,data.startMonth,data.stockName = False,False,False
         # buttons 
-        elif data.width*1.5/10<=event.x<=data.width*3.5/10 and data.height*11/20<=event.y<=data.height*17/20:
+        if data.width*1.5/10<=event.x<=data.width*3.5/10 and data.height*14/20<=event.y<=data.height*17/20:
             data.drawCandle=True 
-            data.candle = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
+            sMonth = Option.startMonth
+            sDay = Option.startYear
+            eMonth = Option.endMonth
+            eDay = Option.endDay
+            if len(Option.startMonth)==1: sMonth="0"+Option.startMonth
+            if len(Option.startDay)==1: sDay = "0"+Option.startDay
+            if len(Option.endMonth)==1: eMonth= "0"+Option.endMonth
+            if len(Option.endDay)==1: eDay = "0"+Option.endDay 
+            endDate = Option.endYear+"-"+eMonth+"-"+eDay 
+            startDate = Option.startYear+"-"+sMonth+"-"+sDay
+            print (startDate,endDate)
+            data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
             data.candle.getScale()
             data.candle.getLowValues()
             data.candle.getHighValues()
             data.candle.getOpenValues()
             data.candle.getCloseValues()
             data.enterStock=False
-        elif data.width*6.5<=event.x<=data.width*8.5/10 and data.height*14/20<=event.y<=data.height*17/20:
+        if (6.5*data.width/10)<=event.x<=(8.5*data.width/10) and (14*data.height/20)<=event.y<=(data.height*17/20):
             data.drawSolidLine=True 
-            data.line = quandl.get('WIKI/'+Option.word,start_date=startDate,end_date=endDate)
+            sMonth = Option.startMonth
+            sDay = Option.startYear
+            eMonth = Option.endMonth
+            eDay = Option.endDay
+            if len(Option.startMonth)==1: sMonth="0"+Option.startMonth
+            if len(Option.startDay)==1: sDay = "0"+Option.startDay
+            if len(Option.endMonth)==1: eMonth= "0"+Option.endMonth
+            if len(Option.endDay)==1: eDay = "0"+Option.endDay 
+            endDate = Option.endYear+"-"+eMonth+"-"+eDay 
+            startDate = Option.startYear+"-"+sMonth+"-"+sDay
+            data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
             data.line.getClosingValues()
             data.line.getDates()                
             data.enterStock=False 
-            
+    #else:
+     #   if data.drawPredicted:
+            # two days for now 
+            # HARDCODED SOME PREDICTION FOR APPPLE FIX!!!
+       #     predictedVal = RegressionModel.linearReg(2,5)
+        #    print (predictedVal)
+       #     data.line.addDates(predictedVal)
+        #    data.line.predictedCloseValues(predictedVal)
             
             
 
@@ -391,24 +429,9 @@ def redrawAll(canvas, data):
     elif data.enterStock:
         Option.draw(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
-        candle = CandleStick('FB',data.width,data.height,5)
-        candle.getScale()   # delete this later 
-        candle.getLowValues()
-        candle.getHighValues()
-        candle.getOpenValues()
-        candle.getCloseValues()
-        candle.drawCandleStick(canvas)
+        data.candle.drawCandleStick(canvas)
     elif data.enterStock==False and data.drawSolidLine==True:
-        line = Solid('FB',data.width,data.height,5)
-        line.getClosingValues()
-        line.getDates()
-        if data.drawPredicted:
-            # two days for now 
-            predictedVal = RegressionModel.linearReg(2,5)
-            print (predictedVal)
-            line.addDates(predictedVal)
-            line.predictedCloseValues(predictedVal)
-        line.drawSolid(canvas)
+        data.line.drawSolid(canvas)
         
         
 
