@@ -56,7 +56,6 @@ class Option(object):
         canvas.create_rectangle(width*4/20,height*11/20,width*5.5/20,height*13/20,fill="white")
         canvas.create_rectangle(width*6/20,height*11/20,width*9/20,height*13/20,fill="white")
         # text for date 
-        print (Option.startMonth)
         canvas.create_text(width*2.75/20,height*12/20,text=Option.startMonth,font = "Dubai 10",fill="black")
         canvas.create_text(width*4.75/20,height*12/20,text=Option.startDay,font = "Dubai 10",fill="black")
         canvas.create_text(width*7.5/20,height*12/20,text=Option.startYear,font = "Dubai 10",fill="black")
@@ -454,33 +453,33 @@ def controlInput(data,letter):
         if letter=="BackSpace" and len(Option.startMonth)>0:
             Option.startMonth=Option.startMonth[:-1]
         elif letter in string.digits and len(Option.startMonth)<2:
-            print ('hi')
             Option.startMonth+=letter
     elif data.startDay:
         if letter=="BackSpace" and len(Option.startDay)>0:
             Option.startDay=Option.startDay[:-1]
-        elif letter in string.ascii_letters and len(Option.startDay)<3:
+        elif letter in string.digits and len(Option.startDay)<2:
             Option.startDay+=letter
     elif data.startYear:
         if letter=="BackSpace" and len(Option.startYear)>0:
             Option.startYear=Option.startYear[:-1]
-        elif letter in string.ascii_letters and len(Option.startYear)<5:
+        elif letter in string.digits and len(Option.startYear)<4:
             Option.startYear+=letter
     elif data.endMonth:
         if letter=="BackSpace" and len(Option.endMonth)>0:
             Option.endMonth=Option.endMonth[:-1]
-        elif letter in string.ascii_letters and len(Option.endMonth)<3:
+        elif letter in string.digits and len(Option.endMonth)<2:
             Option.endMonth+=letter
     elif data.endDay:
         if letter=="BackSpace" and len(Option.endDay)>0:
             Option.endDay=Option.endDay[:-1]
-        elif letter in string.ascii_letters and len(Option.endDay)<3:
+        elif letter in string.digits and len(Option.endDay)<2:
             Option.endDay+=letter
     elif data.endYear:
         if letter=="BackSpace" and len(Option.endYear)>0:
             Option.endYear=Option.endYear[:-1]
-        elif letter in string.ascii_letters and len(Option.endYear)<5:
+        elif letter in string.digits and len(Option.endYear)<4:
             Option.endYear+=letter
+            
 
     
     
