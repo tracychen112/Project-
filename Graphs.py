@@ -192,7 +192,7 @@ class Solid(Graph):
                 txt = self.displayDates[i][6:]
             else:
                 txt = self.displayDates[i][5:]
-            canvas.create_text(xPos,self.height-50,text=txt,font="Calibri 8 bold",angle=90) 
+            canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90) 
         
         # draw predicted  
         if len(newLines)>1:
@@ -207,6 +207,19 @@ class Solid(Graph):
         for point in connectLines:
             canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
         
+        # side labels 
+        canvas.create_text(margin/3,self.height/2,text="Closing Price",font="Dubai 20",angle=90)
+        canvas.create_text(self.width/2,self.height-margin/3,text="Date",font = "Dubai 20")
+        
+        # back button 
+        canvas.create_rectangle(margin/3,margin/3,margin,margin*2/3,outline="black",width=1.5)
+        
+        # predict button 
+        canvas.create_rectangle(self.width-margin,margin/3,self.width-margin/3,margin*2/3,fill="light green",width=1.5)
+        canvas.create_text(self.width-2*margin/3,margin/2,text="PREDICT",font="Dubai 10")
+        
+        #title
+        canvas.create_text(self.width/2,margin/2,text=self.company,font="Dubai 30")
 
         
                 
