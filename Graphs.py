@@ -9,7 +9,7 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 
 
 class Cover(object):
-    
+
     @staticmethod
     def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="lavender",width=0)
@@ -33,7 +33,27 @@ class Menu(object):
         canvas.create_text(41*width/144,4*height/8,text="Candlestick",font="Dubai 15",fill="black")
         canvas.create_text(41*width/144,6*height/8,text="Solid Line",font="Dubai 15",fill="black")
 
+# ISSUE WITH ENTRIES !!!     
+class Option(object):
+    word = ""
 
+    @staticmethod
+    def draw(canvas,width,height):
+        canvas.create_rectangle(0,0,width,height,fill="light grey",width=0)
+        canvas.create_text(width/2,height/5,text="Enter a stock",font="Dubai 20")
+        canvas.create_rectangle(width/8,height*4/10,width*7/8,height*6/10,fill="white")
+        canvas.create_text(width/2,height,3,text=Option.word,font="Dubai 20",fill="black")
+        
+    @staticmethod
+    def enterText(letter):
+        Option.word+=letter 
+        
+    @staticmethod    
+    def deleteText():
+        if len(Option.word)!=0:
+            Option.word=Option.word[:-1]
+        
+        
 
 class Portfolio(object):
     # 
@@ -156,6 +176,7 @@ class Solid(Graph):
         for point in connectLines:
             canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="red")
         
+
         
                 
             
@@ -268,6 +289,7 @@ def init(data):
     data.height = 600 
     data.drawPredicted = False 
     data.menu = False 
+    data.enterStock = False 
 
 
 def mousePressed(event, data):
@@ -275,12 +297,18 @@ def mousePressed(event, data):
         xPos = event.x 
         yPos = event.y
         if data.width/8<=xPos<=4*data.width/9 and 3*data.height/8<=yPos<=7*data.height/8:
+            data.enterStock = True 
+            
+            
+            
 
 def redrawAll(canvas, data):
     if data.startState:
         Cover.draw(canvas,data.width,data.height)
     elif data.menu:
         Menu.draw(canvas,data.width,data.height)
+        if data.enterStock:
+            Option.draw(canvas,data.width,data.height)
     elif data.drawCandle:
         candle = CandleStick('FB',data.width,data.height,5)
         candle.getScale()
@@ -328,7 +356,15 @@ def keyPressed(event, data):
     elif event.keysym=="p":
         data.drawPredicted = not data.drawPredicted 
         
-
+    if data.enterStock:
+        letter = event.keysym
+        if letter=="BackSpace":
+            Option.deleteText()
+        elif letter in string.ascii_letters:
+            letter.upper() 
+            print(letter)
+            Option.enterText(letter)
+            
 def timerFired(data):
     pass 
 
