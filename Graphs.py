@@ -234,7 +234,7 @@ class CandleStick(Graph):
         self.convertHigh = []
         self.convertLow = []
         self.convertClose = []
-        self.margin = self.width/10
+        self.margin = self.width/7
         self.startY = self.height-self.margin
         self.startingPt = self.margin/2
         self.yBase = self.startY-self.startingPt
@@ -315,15 +315,32 @@ class CandleStick(Graph):
             # markers on x-axis 
             canvas.create_line(xPos,self.height-self.margin,xPos,self.height-7*self.margin/8)
             # stack overflow for angle 
-            canvas.create_text(xPos,self.height-30,text=self.dates[i],font="Calibri 8 bold",angle=90) 
+            if self.dates[i][5]=="0":
+                txt = self.dates[i][6:]
+            else:
+                txt = self.dates[i][5:]
+            canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90)
         
         for i in range(len(self.dates)):
             yPos = self.yBase-i*self.yIncrement
             val = self.minimum + i*self.scale
             canvas.create_line(7*self.margin/8,yPos,self.margin,yPos)
             canvas.create_text(7*self.margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
-
-
+            
+        # side labels
+        canvas.create_text(self.margin/3,self.height/2,text="Price",font="Dubai 20",angle=90)
+        canvas.create_text(self.width/2,self.height-self.margin/3,text="Date",font = "Dubai 20")
+        # title 
+        canvas.create_text(self.width/2,self.margin/2,text=self.company,font="Dubai 30")
+        
+        # legend 
+        canvas.create_rectangle(self.width-2.1*self.margin,self.margin/5,self.width-self.margin/5,self.margin*4/5)
+        canvas.create_text(self.width-1.32*self.margin,self.margin*2/7,text="Tip of Candle: Highest price of that day",font='Dubai 7')
+        canvas.create_text(self.width-1.24*self.margin,self.margin*3/7,text="Bottom of Candle: Lowest price of that day",font='Dubai 7')
+        canvas.create_text(self.width-self.margin,self.margin*4/7,text="Closing Price higher than Opening Price",font='Dubai 7')
+        canvas.create_text(self.width-self.margin,self.margin*5/7,text="Opening Price higher than Closing Price",font='Dubai 7')
+        canvas.create_line(self.width-2*self.margin,self.margin*4/7,self.width-1.8*self.margin,self.margin*4/7,fill="white",width=3)
+        canvas.create_line(self.width-2*self.margin,self.margin*5/7,self.width-1.8*self.margin,self.margin*5/7,fill="red",width=3)
 ## 112 website template 
 def init(data):
     data.startState = True 
@@ -463,11 +480,11 @@ def keyPressed(event, data):
         data.drawCandle= False  
         data.startState = False
         data.drawSolidLine = False
-    elif event.keysym=="s":
+    elif event.keysym=="l":
         data.drawCandle= False 
         data.startState = False
         data.drawSolidLine = True 
-    elif event.keysym=="b":
+    elif event.keysym=="s":
         data.drawCandle= False
         data.startState = True 
         data.drawSolidLine = False
