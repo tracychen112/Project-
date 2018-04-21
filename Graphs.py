@@ -75,6 +75,7 @@ class Option(object):
         
 
 class Portfolio(object):
+    # to add in keypressed
     stocks = []
     moves = []
     numShares = []
@@ -103,7 +104,7 @@ class Portfolio(object):
             canvas.create_rectangle(margin,margin+i*rowWidth,width-margin,margin+(i+1)*rowWidth,fill='light grey')
         # columns in table 
         for i in range(numCols):
-            canvas.create_line((i+1)*columnWidth+margin,margin,(i+1)*columnWidth+margin,width-margin)
+            canvas.create_line((i+1)*columnWidth+margin,margin,(i+1)*columnWidth+margin,width-3.12*margin)
             
         # drawing things in table 
         for i in range(numCols):
@@ -112,13 +113,20 @@ class Portfolio(object):
         # graph buttons
         for i in range(1,numRows):
             canvas.create_rectangle(width-margin-columnWidth,margin+i*rowWidth,width-margin-columnWidth/2,margin+(i+1)*rowWidth,fill="light yellow")
-            canvas.create_text(width-margin-3*columnWidth/2,(margin+ 2*rowWidth*i+rowWidth)/2,text='Candle',font='Calibri 7') 
+            canvas.create_text(width-margin-3*columnWidth/4,margin+rowWidth*(2*i+1)/2,text='Candle',font='Calibri 7') 
             canvas.create_rectangle(width-margin-columnWidth/2,margin+i*rowWidth,width-margin,margin+(i+1)*rowWidth,fill='light pink')
-            canvas.create_text(width-margin-(columnWidth+margin)/2,(margin+ 2*rowWidth*i+rowWidth)/2,text="Solid",font='Calibri 7')
+            canvas.create_text(width-margin-columnWidth/4,margin+rowWidth*(2*i+1)/2,text="Solid",font='Calibri 7')
         
+        # calculate and save buttons
+        canvas.create_rectangle(width-4.75*margin,margin/6,width-2.875*margin,margin*5/6,fill="light blue")
+        canvas.create_text(width-3.8*margin,margin/2,text='Calculate',font='Calibri 10 bold')
+        canvas.create_rectangle(width-2.875*margin,margin/6,width-margin,margin*5/6,fill="light green")
+        canvas.create_text(width-2*margin,margin/2,text='Save',font='Calibri 10 bold')
         
-        
-
+        # back button 
+        canvas.create_rectangle(margin/3,margin/3,margin,margin*2/3,outline="black",width=1.5)
+        canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
+        canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
 
 
 class Graph(object):
