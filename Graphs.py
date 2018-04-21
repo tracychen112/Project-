@@ -7,7 +7,6 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
 
 
-
 class Cover(object):
 
     @staticmethod
@@ -16,11 +15,11 @@ class Cover(object):
         canvas.create_text(width/2,height/3,text="iStockUp",font="Dubai 50",fill="black")
         # Dubai, Gigi
         
-class Menu(object):
+class Choice(object):
     @staticmethod
     def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light yellow",width=0)
-        canvas.create_text(width/2,height/10,text="Menu",font="Dubai 50",fill="black")
+        canvas.create_text(width/2,height/10,text="Options",font="Dubai 50",fill="black")
         # View graphs 
         canvas.create_rectangle(width/8,3*height/8,4*width/9,7*height/8,fill="white")
         # View earnings/portfolio 
@@ -76,8 +75,50 @@ class Option(object):
         
 
 class Portfolio(object):
-    # 
-    pass 
+    stocks = []
+    moves = []
+    numShares = []
+    endDate = []
+    endPrices = []
+    earnings = []
+    
+
+    @staticmethod
+    def drawEntry(canvas,width,height):
+        # background
+        title = ['Stock','Buy/Short','# of Shares','End date','End date price','Earnings','Graph']
+        margin=width/15
+        numRows = 11
+        numCols = 7
+        rowWidth = (height-2*margin)/numRows
+        columnWidth =  (width-2*margin)/numCols
+        canvas.create_rectangle(0,0,width,height,fill="wheat1")
+        
+       # optional pie chart? 
+       # canvas.create_rectangle(width-width*.4,2*height/3,width-width/5,height*9/10,fill="cornflower blue")
+       # canvas.create_text(.3*width,.8*height,text="Visualize Portfolio",font="Dubai 20")
+       
+        # rows in table 
+        for i in range(numRows):
+            canvas.create_rectangle(margin,margin+i*rowWidth,width-margin,margin+(i+1)*rowWidth,fill='light grey')
+        # columns in table 
+        for i in range(numCols):
+            canvas.create_line((i+1)*columnWidth+margin,margin,(i+1)*columnWidth+margin,width-margin)
+            
+        # drawing things in table 
+        for i in range(numCols):
+            canvas.create_text(i*columnWidth+margin+columnWidth/2,rowWidth/2+margin,text=title[i],font="Calibri 10 bold")
+        
+        # graph buttons
+        for i in range(1,numRows):
+            canvas.create_rectangle(width-margin-columnWidth,margin+i*rowWidth,width-margin-columnWidth/2,margin+(i+1)*rowWidth,fill="light yellow")
+            canvas.create_text(width-margin-3*columnWidth/2,(margin+ 2*rowWidth*i+rowWidth)/2,text='Candle',font='Calibri 7') 
+            canvas.create_rectangle(width-margin-columnWidth/2,margin+i*rowWidth,width-margin,margin+(i+1)*rowWidth,fill='light pink')
+            canvas.create_text(width-margin-(columnWidth+margin)/2,(margin+ 2*rowWidth*i+rowWidth)/2,text="Solid",font='Calibri 7')
+        
+        
+        
+
 
 
 class Graph(object):
@@ -107,9 +148,8 @@ class Graph(object):
         for d in self.dates.index.tolist():
             date = str(d)
             #print(date[:10])
+            print('hi')
             self.displayDates.append((date[:10]))
-        #print (self.displayDates)
-        return self.displayDates 
     
     def addDates(self,predicted):
         for prediction in predicted:
@@ -126,7 +166,7 @@ class Graph(object):
             for i in range(len(self.close[val])):
                 self.solidCloseValues.append(self.close[val][i])
                 self.numOrigVal+=1
-        return self.solidCloseValues
+        #return self.solidCloseValues
         #print(plotClosingVal)
 
     def predictedCloseValues(self,predicted):
@@ -178,7 +218,7 @@ class Solid(Graph):
        # print('dates',self.solidCloseValues)
         for i in range(len(self.displayDates)):
             xPos = i*increment + margin + startingPt
-            yPos = yBase-yIncrement/scale* (self.solidCloseValues[i]-minimum)
+            yPos = yBase-(yIncrement/scale)* (self.solidCloseValues[i]-minimum)
             if i==self.numOrigVal-1:
                 newLines.append((xPos,yPos))
                 connectLines.append((xPos,yPos))
@@ -213,6 +253,8 @@ class Solid(Graph):
         
         # back button 
         canvas.create_rectangle(margin/3,margin/3,margin,margin*2/3,outline="black",width=1.5)
+        canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
+        canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
         
         # predict button 
         canvas.create_rectangle(self.width-margin,margin/3,self.width-margin/3,margin*2/3,fill="light green",width=1.5)
@@ -239,9 +281,10 @@ class CandleStick(Graph):
         self.startingPt = self.margin/2
         self.yBase = self.startY-self.startingPt
         self.minimum = None 
-        self.dates = self.getDates()
         self.yIncrement = (self.height-2*self.margin)/len(self.dates)
         self.increment = (self.width-2*self.margin)/len(self.dates)
+        self.portfolio = False 
+        
         
     def getScale(self):
         lowVal = []
@@ -257,39 +300,43 @@ class CandleStick(Graph):
         self.maxVal = max(highVal)
         scale = (self.maxVal-self.minVal)/len(self.dates)
         self.scale = int(scale)+1
-        print(self.maxVal,self.minVal,self.minimum)
-        print('low',lowVal)
-        print('high',highVal)
-        print('scale',self.scale)
+        #print(self.maxVal,self.minVal,self.minimum)
+        #print('low',lowVal)
+        #print('high',highVal)
+        #print('scale',self.scale)
         
     def getLowValues(self):
         for val in self.low:
             for i in range(len(self.low[val])):
+                #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
                 value = self.low[val][i]
-                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
+                newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
+                #print (value,newVal)
                 self.convertLow.append(newVal)
-        print('converted low',self.convertLow)
+       # print('converted low',self.convertLow)
+       # print ('low',self.low)
         
     def getHighValues(self):
         for val in self.high:
             for i in range(len(self.high[val])):
                 value = self.high[val][i]
-                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
+                newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
                 self.convertHigh.append(newVal)
         
     def getOpenValues(self):
         for val in self.open:
             for i in range(len(self.open[val])):
                 value = self.open[val][i]
-                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
+                print (value)
+                newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
                 self.convertOpen.append(newVal)
-
+        print(self.convertOpen[0])
+        
     def getCloseValues(self):
-        for val in self.close:
-            for i in range(len(self.close[val])):
-                value = self.close[val][i]
-                newVal = self.yBase-self.yIncrement/self.scale*(value-self.minimum)
+        for val in self.solidCloseValues:           
+                newVal = self.yBase-(self.yIncrement/self.scale)*(val-self.minimum)
                 self.convertClose.append(newVal)
+        print (self.solidCloseValues[0],self.convertClose[0])
         
     
     def drawCandleStick(self,canvas):
@@ -297,7 +344,8 @@ class CandleStick(Graph):
         canvas.create_rectangle(0,0,self.width,self.height,fill="light green",width=0)
         canvas.create_rectangle(self.margin,self.margin,self.width-self.margin,self.height-self.margin,fill="white")
         
-        for i in range(len(self.dates)):
+        
+        for i in range(len(self.displayDates)):
             xPos = i*self.increment + self.margin + self.startingPt
             # high and low plot
             # values are FLIPPED-higher-means low, lower means high 
@@ -315,13 +363,20 @@ class CandleStick(Graph):
             # markers on x-axis 
             canvas.create_line(xPos,self.height-self.margin,xPos,self.height-7*self.margin/8)
             # stack overflow for angle 
-            if self.dates[i][5]=="0":
-                txt = self.dates[i][6:]
+            if self.displayDates[i][5]=="0":
+                txt = self.displayDates[i][6:]
             else:
-                txt = self.dates[i][5:]
+                txt = self.displayDates[i][5:]
             canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90)
+            
+        # draw year 
+        if self.displayDates[0][:4]!=self.displayDates[-1][:4]:
+            dateTxt = "Years: " + self.displayDates[0][:4] + "-" + self.displayDates[-1][:4]
+        else: 
+            dateTxt = "Year: " + self.displayDates[0][:4]
+        canvas.create_text(1.5*self.margin,self.margin-10,text= dateTxt,font="Dubai 15")
         
-        for i in range(len(self.dates)):
+        for i in range(len(self.displayDates)):
             yPos = self.yBase-i*self.yIncrement
             val = self.minimum + i*self.scale
             canvas.create_line(7*self.margin/8,yPos,self.margin,yPos)
@@ -341,6 +396,11 @@ class CandleStick(Graph):
         canvas.create_text(self.width-self.margin,self.margin*5/7,text="Opening Price higher than Closing Price",font='Dubai 7')
         canvas.create_line(self.width-2*self.margin,self.margin*4/7,self.width-1.8*self.margin,self.margin*4/7,fill="white",width=3)
         canvas.create_line(self.width-2*self.margin,self.margin*5/7,self.width-1.8*self.margin,self.margin*5/7,fill="red",width=3)
+        
+        # back button
+        canvas.create_rectangle(self.margin/3,self.margin/3,self.margin,self.margin*2/3,outline="black",width=1.5)
+        canvas.create_rectangle(self.margin/2,self.margin*1.25/3,self.margin,self.margin*1.75/3,fill='green',outline='black',width=2)
+        canvas.create_polygon(self.margin/2,self.margin/3,self.margin/3,self.margin/2,self.margin/2,self.margin*2/3,fill='green',outline='black',width=2)
 ## 112 website template 
 def init(data):
     data.startState = True 
@@ -349,7 +409,7 @@ def init(data):
     data.width = 700
     data.height = 600 
     data.drawPredicted = False 
-    data.menu = False 
+    data.Choice = False 
     data.enterStock = False 
     # entering options 
     data.startMonth = False 
@@ -359,14 +419,17 @@ def init(data):
     data.endDay = False
     data.endYear = False
     data.stockName = False
-    
+    data.portfolio = False 
 
 
 def mousePressed(event, data):
-    if data.menu:
+    if data.Choice:
         if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
             data.enterStock=True 
-            data.menu = False 
+            data.Choice = False 
+        elif 5*data.width/9<=event.x<=7*data.width/8 and 3*data.height/8<=event.y<=7*data.height/8:
+            data.portfolio=True 
+            data.Choice = False 
     elif data.enterStock:
         if data.width/8<=event.x<=data.width*7/8 and data.height*2.5/10<=event.y<=data.width*3.5/10:
             Option.word = ""
@@ -416,8 +479,10 @@ def mousePressed(event, data):
             if len(Option.endDay)==1: eDay = "0"+Option.endDay 
             endDate = Option.endYear+"-"+eMonth+"-"+eDay 
             startDate = Option.startYear+"-"+sMonth+"-"+sDay
-            print (startDate,endDate)
+            
             data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
+            data.candle.getDates()
+            data.candle.getClosingValues()
             data.candle.getScale()
             data.candle.getLowValues()
             data.candle.getHighValues()
@@ -437,8 +502,8 @@ def mousePressed(event, data):
             endDate = Option.endYear+"-"+eMonth+"-"+eDay 
             startDate = Option.startYear+"-"+sMonth+"-"+sDay
             data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
+            data.line.getDates()
             data.line.getClosingValues()
-            data.line.getDates()                
             data.enterStock=False 
     #else:
      #   if data.drawPredicted:
@@ -454,14 +519,16 @@ def mousePressed(event, data):
 def redrawAll(canvas, data):
     if data.startState:
         Cover.draw(canvas,data.width,data.height)
-    elif data.menu:
-        Menu.draw(canvas,data.width,data.height)
+    elif data.Choice:
+        Choice.draw(canvas,data.width,data.height)
     elif data.enterStock:
         Option.draw(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
         data.candle.drawCandleStick(canvas)
     elif data.enterStock==False and data.drawSolidLine==True:
         data.line.drawSolid(canvas)
+    elif data.portfolio:
+        Portfolio.drawEntry(canvas,data.width,data.height)
         
         
 
@@ -476,7 +543,7 @@ def keyPressed(event, data):
         data.drawSolidLine = False
     # no more of this-- use button 
     elif event.keysym=="space":
-        data.menu = True 
+        data.Choice = True 
         data.drawCandle= False  
         data.startState = False
         data.drawSolidLine = False
