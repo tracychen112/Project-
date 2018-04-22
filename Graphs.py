@@ -76,13 +76,21 @@ class Option(object):
 
 class Portfolio(object):
     # to add in keypressed
-    stocks = []
-    moves = []
-    numShares = []
-    endDate = []
-    endPrices = []
-    earnings = []
+    # stocks: 0, moves: 1, numShares:2, endDate:3, endPrices:4, earnings:5
+    items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
     
+    @staticmethod
+    def drawItems(canvas,width,height):
+        margin=width/15
+        numRows = 11
+        numCols = 7
+        rowWidth = (height-2*margin)/numRows
+        colWidth =  (width-2*margin)/numCols
+        startX = rowWidth/2
+        startY = colWidth/2
+        for categ in Portfolio.items:
+            for i in range(len(Portfolio.items[categ])):
+                canvas.create_text(margin+startY+categ*(colWidth),margin+startX+rowWidth+i*(rowWidth),text = Portfolio.items[categ][i],font='Dubai 10')
 
     @staticmethod
     def drawEntry(canvas,width,height):
@@ -428,7 +436,7 @@ def init(data):
     data.endYear = False
     data.stockName = False
     data.portfolio = False 
-
+    data.pFPoint = tuple()
 
 def mousePressed(event, data):
     if data.Choice:
@@ -513,6 +521,8 @@ def mousePressed(event, data):
             data.line.getDates()
             data.line.getClosingValues()
             data.enterStock=False 
+    elif data.portfolio:
+        myPortfolio(data,event.x,event.y)
     #else:
      #   if data.drawPredicted:
             # two days for now 
@@ -522,6 +532,15 @@ def mousePressed(event, data):
        #     data.line.addDates(predictedVal)
         #    data.line.predictedCloseValues(predictedVal)
             
+def myPortfolio(data,x,y):
+    margin = data.width/15
+    rowWidth = (data.height-2*margin)/11
+    colWidth = (data.width-2*margin)/7
+    row = int(x//(2*rowWidth+margin))
+    col = int(y//(colWidth+margin))
+    if 0<=col<=3: 
+        print (row,col)
+        data.pFPoint = (row,col)
             
 
 def redrawAll(canvas, data):
@@ -537,6 +556,7 @@ def redrawAll(canvas, data):
         data.line.drawSolid(canvas)
     elif data.portfolio:
         Portfolio.drawEntry(canvas,data.width,data.height)
+        Portfolio.drawItems(canvas,data.width,data.height)
         
         
 
@@ -569,8 +589,17 @@ def keyPressed(event, data):
     if data.enterStock:
         letter = event.keysym
         controlInput(data,letter)
+    elif data.portfolio:
+        letter = event.keysym 
+        (posit,categ)= data.pFPoint
+        print (categ)
+        if posit>=0 and posit<len(Portfolio.items[categ]):
+            if letter!='BackSpace':
+                Portfolio.items[categ][posit]+=letter
+            elif letter=='BackSpace' and len(Portfolio.items[categ][posit])>0:
+                Portfolio.items[categ][posit]=Portfolio.items[categ][posit][:-1]
         
-
+            
 def controlInput(data,letter):
     if data.stockName:
         if letter=="BackSpace" and len(Option.word)>0:
@@ -608,9 +637,6 @@ def controlInput(data,letter):
         elif letter in string.digits and len(Option.endYear)<4:
             Option.endYear+=letter
             
-
-    
-    
     
          
 def timerFired(data):
