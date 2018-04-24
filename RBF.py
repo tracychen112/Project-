@@ -1,39 +1,65 @@
 #This code just implements the k-means clustering algorithm and computes the standard deviations. 
 #It references to https://pythonmachinelearning.pro/using-neural-networks-for-regression-radial-basis-function-networks/
-
+from tkinter import *
+import quandl
+import RegressionModel 
+quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
+import RegressionModel
 import random
 import math
-import numpy as np
+import copy 
+import numpy as np 
+
+#origDates = quandl.get("WIKI/TSLA", start_date="2018-02-01", end_date="2018-03-01",column_index=0)
+#data2 = quandl.get("WIKI/TSLA", start_date="2018-02-01", end_date="2018-03-01",column_index=4)
+#origPrices = RegressionModel.getClosingValues(data2)
 
 
-dates = []
-prices = []
-start_month = 1
 
-def get_data(filename):
-    with open(filename, 'r') as csvfile:
-        csvFileReader = csv.reader(csvfile)
-        next(csvFileReader)
-        for row in csvFileReader:
-            dates.append(31*(int(row[0].split('/')[0])-start_month)+int(row[0].split('/')[1]))
-            prices.append(float(row[1]))
-    return
+def mainPredict(origDates,origPrices,predDays):
+    dates = convertDates(origDates)
+    prices = copy.copy(origPrices)
+    rbfNet = RBFNet(lr=1e-2, k=4)
+    rbfNet.fit(dates, prices)
+    predictedPrices = rbfNet.predict(dates)
+    datesLst = formatDates(origDates)
+    #print(len(list(origDates.index)),len(predictedPrices))
+    return (datesLst,predictedPrices)
+    
+#year2 - year1 *365 + (month2-startmonth)* 31 + day 
+def formatDates(origDates):
+    datesLst = []
+    for d in origDates.index.tolist():
+        #print(d)
+        date = str(d)
+        datesLst.append(date[:10])
+    return datesLst
+    
+def convertDates(origDates):
+    newDates = []
+    for d in list(origDates.index):
+        date = str(d) 
+        monthToDays = (int(date[5:7])-1)
+        days = int(date[8:10])
+        year = int(date[:4])
+        newDates.append(31*monthToDays+days+year)
+    return newDates 
 
 def rbf(x, c, s):
+    print (x,c,s)
     return math.exp(-1 / (2 * s**2) * (x-c)**2)
 
 
 # https://codeselfstudy.com/blogs/how-to-calculate-standard-deviation-in-python
 def standard_deviation(lst, population=True):
     """Calculates the standard deviation for a list of numbers."""
-    num_items = len(lst)
-    mean = sum(lst) / num_items
+    numItems = len(lst)
+    mean = sum(lst) / numItems
     differences = [x - mean for x in lst]
-    sq_differences = [d ** 2 for d in differences]
-    ssd = sum(sq_differences)
- 
+    sqDifferences = [d ** 2 for d in differences]
+    ssd = sum(sqDifferences)
     if population is True:
-        variance = ssd / num_items
+        variance = ssd / numItems
     else:
         # WHY HERE SUBTRACT 1?!
         variance = ssd / (num_items - 1)
@@ -155,18 +181,18 @@ class RBFNet(object):
         self.inferStds = inferStds
 
         # the only two lines using numpy because it's too complicated to implement
-        #self.w = np.random.randn(k).tolist()
-        #self.b = np.random.randn(1).tolist()
+        self.w = np.random.randn(k).tolist()
+        self.b = np.random.randn(1).tolist()
         
         # Box muller method- generate two independent normal random variables
         #https://stats.stackexchange.com/questions/16334/how-to-sample-from-a-normal-distribution-with-known-mean-and-variance-using-a-co 
+        '''
         self.w = []
-        self.b = [] 
         if int(k)%2==1:
             numGenerate = int(k)+1
         else:
             numGenerate = int(k)
-        for i in range(k):
+        for i in range(k//2):
             U1 = random.uniform(0,1)
             U2 = random.uniform(0,1)
             z1 = math.sqrt(-2*math.log(U1,math.e))*math.cos(2*math.pi*U2)
@@ -179,8 +205,8 @@ class RBFNet(object):
         U2 = random.uniform(0,1)
         z1 = math.sqrt(-2*math.log(U1,math.e))*math.cos(2*math.pi*U2)
         z2 = math.sqrt(-2*math.log(U1,math.e))*math.sin(2*math.pi*U2)
-        self.b.extend([z1,z2])
-
+        self.b = [random.choice([z1,z2])]
+        '''
     def fit(self, X, y):
        
         # compute stds from data
@@ -223,3 +249,5 @@ class RBFNet(object):
             y_pred.append(F)
         
         return y_pred
+        
+#print(mainPredict(origDates,origPrices,2))
