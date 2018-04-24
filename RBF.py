@@ -1,30 +1,47 @@
 #This code just implements the k-means clustering algorithm and computes the standard deviations. 
 #It references to https://pythonmachinelearning.pro/using-neural-networks-for-regression-radial-basis-function-networks/
 from tkinter import *
-import quandl
-import RegressionModel 
+import quandl 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
-import RegressionModel
 import random
 import math
 import copy 
 import numpy as np 
 
-#origDates = quandl.get("WIKI/TSLA", start_date="2018-02-01", end_date="2018-03-01",column_index=0)
-#data2 = quandl.get("WIKI/TSLA", start_date="2018-02-01", end_date="2018-03-01",column_index=4)
-#origPrices = RegressionModel.getClosingValues(data2)
-
-
+'''
+origDates = quandl.get("WIKI/TSLA", start_date="2018-03-02", end_date="2018-03-12",column_index=0)
+data2 = quandl.get("WIKI/TSLA", start_date="2018-03-02", end_date="2018-03-12",column_index=4)
+origPrices = RegressionModel.getClosingValues(data2)
+#print (origDates.index)
+print (origPrices)
+'''
+predDays = 2
 
 def mainPredict(origDates,origPrices,predDays):
+    print (origDates)
     dates = convertDates(origDates)
+    newDates = list(range(dates[-1]+1,predDays+1))
     prices = copy.copy(origPrices)
-    rbfNet = RBFNet(lr=1e-2, k=4)
+    rbfNet = RBFNet(lr=1e-2, k=2)
     rbfNet.fit(dates, prices)
-    predictedPrices = rbfNet.predict(dates)
+    newDates = [i for i in range(dates[-1]+1,dates[-1]+1+predDays)]
+    newDateIP = []
+    for i in newDates:
+        month = i//31 + 2
+        day = i%31
+        year = '2018'
+        #year = i//365+ dates[0]
+        date = year + '-'+str(month)+'-'+str(day)
+        print (date)
+        newDateIP.append(date)
+    predictedPrices = rbfNet.predict(newDates)
     datesLst = formatDates(origDates)
     #print(len(list(origDates.index)),len(predictedPrices))
-    return (datesLst,predictedPrices)
+    #print (predictedPrices)
+    #print ('dates',dates)
+    #print ('prices',prices)
+    print (predictedPrices)
+    return (newDateIP,predictedPrices)
     
 #year2 - year1 *365 + (month2-startmonth)* 31 + day 
 def formatDates(origDates):
@@ -37,31 +54,33 @@ def formatDates(origDates):
     
 def convertDates(origDates):
     newDates = []
+    year = int(str(list(origDates.index)[0])[:4])
     for d in list(origDates.index):
         date = str(d) 
-        monthToDays = (int(date[5:7])-1)
+        month = int(date[5:7])-1
         days = int(date[8:10])
-        year = int(date[:4])
-        newDates.append(31*monthToDays+days+year)
+        #year = (int(date[:4])-year)*365 
+        #print('month',date[5:7])
+        #print('day',date[8:10])
+        newDates.append((month + days))
     return newDates 
 
 def rbf(x, c, s):
-    print (x,c,s)
     return math.exp(-1 / (2 * s**2) * (x-c)**2)
 
 
 # https://codeselfstudy.com/blogs/how-to-calculate-standard-deviation-in-python
 def standard_deviation(lst, population=True):
     """Calculates the standard deviation for a list of numbers."""
-    numItems = len(lst)
-    mean = sum(lst) / numItems
+    num_items = len(lst)
+    mean = sum(lst) / num_items
     differences = [x - mean for x in lst]
-    sqDifferences = [d ** 2 for d in differences]
-    ssd = sum(sqDifferences)
+    sq_differences = [d ** 2 for d in differences]
+    ssd = sum(sq_differences)
+ 
     if population is True:
-        variance = ssd / numItems
+        variance = ssd / num_items
     else:
-        # WHY HERE SUBTRACT 1?!
         variance = ssd / (num_items - 1)
     sd = math.sqrt(variance)
     return sd
@@ -128,10 +147,7 @@ def kmeans(X, k):
            sum += (clusters[i]-prevClusters[i])**2
         converged = math.sqrt(sum)  < 1e-6
         prevClusters = clusters.copy()
-
-     
         
-
     # calculate distance
     for i in range(len(X)):
         for j in range(len(clusters)):
@@ -179,14 +195,10 @@ class RBFNet(object):
         self.epochs = epochs
         self.rbf = rbf
         self.inferStds = inferStds
-
-        # the only two lines using numpy because it's too complicated to implement
-        self.w = np.random.randn(k).tolist()
-        self.b = np.random.randn(1).tolist()
         
-        # Box muller method- generate two independent normal random variables
-        #https://stats.stackexchange.com/questions/16334/how-to-sample-from-a-normal-distribution-with-known-mean-and-variance-using-a-co 
-        '''
+        #self.w = np.random.randn(k).tolist()
+        #self.b = np.random.randn(1).tolist()
+        
         self.w = []
         if int(k)%2==1:
             numGenerate = int(k)+1
@@ -206,7 +218,8 @@ class RBFNet(object):
         z1 = math.sqrt(-2*math.log(U1,math.e))*math.cos(2*math.pi*U2)
         z2 = math.sqrt(-2*math.log(U1,math.e))*math.sin(2*math.pi*U2)
         self.b = [random.choice([z1,z2])]
-        '''
+        
+
     def fit(self, X, y):
        
         # compute stds from data
@@ -216,7 +229,7 @@ class RBFNet(object):
             for i in range(len(X)):
                 # forward pass
                 a1 = [self.rbf(X[i], c, s) for c, s, in zip(self.centers, self.stds)]
- 
+                
                 #compute a.T.dot(self.w)
                 dotSum = 0
                 for j in range(len(a1)):
@@ -249,5 +262,5 @@ class RBFNet(object):
             y_pred.append(F)
         
         return y_pred
-        
+    
 #print(mainPredict(origDates,origPrices,2))
