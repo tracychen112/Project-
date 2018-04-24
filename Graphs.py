@@ -1,8 +1,7 @@
 from tkinter import * 
 import RBF   
 import string 
-import quandl
-import RegressionModel 
+import quandl 
 import numpy as np 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
@@ -13,11 +12,19 @@ class Cover(object):
 
     @staticmethod
     def draw(canvas,width,height):
+        fractW = width/5
+        fractL = width/20 
         canvas.create_rectangle(0,0,width,height,fill="lavender",width=0)
+        canvas.create_rectangle(width/2,height/2-fractL,width/2+fractW,height/2,fill="white")
+        canvas.create_rectangle(width/2,height/2+fractL,width/2+fractW,height/2 + 2*fractL,fill="white")
         canvas.create_text(width/2,height/3,text="iStockUp",font="Dubai 50",fill="black")
-        # Dubai, Gigi
+        canvas.create_text(width/2,height/2-fractL,text="Username ",anchor=NE,font="Dubai 20",fill="black")
+        canvas.create_text(width/2,height/2+fractL,text="Password ",anchor=NE,font= 'Dubai 20',fill="black")
+        canvas.create_text(width/2,height*3/4,text="'Press enter to login'",font='Dubai 20',fill='black')
+        # Dubai
         
 class Choice(object):
+    
     @staticmethod
     def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light yellow",width=0)
@@ -48,17 +55,21 @@ class Option(object):
         canvas.create_text(width/2,height/5,text="Enter a stock",font="Dubai 20")
         canvas.create_rectangle(width/8,2.5*height/10,width*7/8,height*3.5/10,fill="white")
         canvas.create_text(width/2,height*3/10,text=Option.word,font="Dubai 20",fill="black")
+        
         # dates 
         canvas.create_text(width*2/8,height*5/10,text="Starting Date",font = "Dubai 20",fill="black")
         canvas.create_text(width*6/8,height*5/10,text="Ending Date",font = "Dubai 20",fill="black")
+        
         #start date boxes 
         canvas.create_rectangle(width*2/20,height*11/20,width*3.5/20,height*13/20,fill="white")
         canvas.create_rectangle(width*4/20,height*11/20,width*5.5/20,height*13/20,fill="white")
         canvas.create_rectangle(width*6/20,height*11/20,width*9/20,height*13/20,fill="white")
+        
         # text for date 
         canvas.create_text(width*2.75/20,height*12/20,text=Option.startMonth,font = "Dubai 10",fill="black")
         canvas.create_text(width*4.75/20,height*12/20,text=Option.startDay,font = "Dubai 10",fill="black")
         canvas.create_text(width*7.5/20,height*12/20,text=Option.startYear,font = "Dubai 10",fill="black")
+        
         #end date boxes 
         canvas.create_rectangle(width*11/20,height*11/20,width*12.5/20,height*13/20,fill="white")
         canvas.create_rectangle(width*13/20,height*11/20,width*14.5/20,height*13/20,fill="white")
@@ -184,6 +195,7 @@ class Graph(object):
         # Get numbers of a specific column 
         # CHECK CLOSING VALUES 
         # print(closingVal)
+        print (self.close)
         for val in self.close:
             for i in range(len(self.close[val])):
                 self.solidCloseValues.append(self.close[val][i])
@@ -449,6 +461,8 @@ def init(data):
     data.pFPoint = tuple()
 
 def mousePressed(event, data):
+    if data.startState:
+        pass 
     if data.Choice:
         if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
             data.enterStock=True 
@@ -457,82 +471,15 @@ def mousePressed(event, data):
             data.portfolio=True 
             data.Choice = False 
     elif data.enterStock:
-        if data.width/8<=event.x<=data.width*7/8 and data.height*2.5/10<=event.y<=data.width*3.5/10:
-            Option.word = ""
-            data.stockName = True
-            data.startDay,data.startYear,data.endMonth=False,False,False 
-            data.endDay,data.endYear,data.startMonth = False,False,False
-        if data.width*2/20<=event.x<=data.width*3.5/20 and data.height*11/20<=event.y<=data.height*13/20:
-            Option.startMonth = ""
-            data.startMonth = True 
-            data.startDay,data.startYear,data.endMonth=False,False,False 
-            data.endDay,data.endYear,data.stockName = False,False,False  
-        if data.width*4/20<=event.x<=data.width*5.5/20 and data.height*11/20<=event.y<=data.height*13/20:
-            Option.startDay = "" 
-            data.startDay = True 
-            data.startMonth,data.startYear,data.endMonth=False,False,False 
-            data.endDay,data.endYear,data.stockName = False,False,False       
-        if data.width*6/20<=event.x<=data.width*9/20 and data.height*11/20<=event.y<=data.height*13/20:
-            Option.startYear="" 
-            data.startYear = True 
-            data.startDay,data.startMonth,data.endMonth=False,False,False 
-            data.endDay,data.endYear,data.stockName = False,False,False
-        if data.width*11/20<=event.x<=data.width*12.5/20 and data.height*11/20<=event.y<=data.height*13/20:
-            Option.endMonth = "" 
-            data.endMonth = True 
-            data.startDay,data.startYear,data.startMonth=False,False,False 
-            data.endDay,data.endYear,data.stockName = False,False,False
-        if data.width*13/20<=event.x<=data.width*14.5/20 and data.height*11/20<=event.y<=data.height*13/20:
-            Option.endDay = ""
-            data.endDay = True 
-            data.startDay,data.startYear,data.endMonth=False,False,False 
-            data.startMonth,data.endYear,data.stockName = False,False,False
-        if data.width*15/20<=event.x<=data.width*18/20 and data.height*11/20<=event.y<=data.height*13/20:    
-            Option.endYear = ""
-            data.endYear = True 
-            data.startDay,data.startYear,data.endMonth=False,False,False 
-            data.endDay,data.startMonth,data.stockName = False,False,False
-        # buttons 
-        if data.width*1.5/10<=event.x<=data.width*3.5/10 and data.height*14/20<=event.y<=data.height*17/20:
-            data.drawCandle=True 
-            sMonth = Option.startMonth
-            sDay = Option.startYear
-            eMonth = Option.endMonth
-            eDay = Option.endDay
-            if len(Option.startMonth)==1: sMonth="0"+Option.startMonth
-            if len(Option.startDay)==1: sDay = "0"+Option.startDay
-            if len(Option.endMonth)==1: eMonth= "0"+Option.endMonth
-            if len(Option.endDay)==1: eDay = "0"+Option.endDay 
-            endDate = Option.endYear+"-"+eMonth+"-"+eDay 
-            startDate = Option.startYear+"-"+sMonth+"-"+sDay
-            
-            data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
-            data.candle.getDates()
-            data.candle.getClosingValues()
-            data.candle.getScale()
-            data.candle.getLowValues()
-            data.candle.getHighValues()
-            data.candle.getOpenValues()
-            data.candle.getCloseValues()
-            data.enterStock=False
-        if (6.5*data.width/10)<=event.x<=(8.5*data.width/10) and (14*data.height/20)<=event.y<=(data.height*17/20):
-            data.drawSolidLine=True 
-            sMonth = Option.startMonth
-            sDay = Option.startYear
-            eMonth = Option.endMonth
-            eDay = Option.endDay
-            if len(Option.startMonth)==1: sMonth="0"+Option.startMonth
-            if len(Option.startDay)==1: sDay = "0"+Option.startDay
-            if len(Option.endMonth)==1: eMonth= "0"+Option.endMonth
-            if len(Option.endDay)==1: eDay = "0"+Option.endDay 
-            endDate = Option.endYear+"-"+eMonth+"-"+eDay 
-            startDate = Option.startYear+"-"+sMonth+"-"+sDay
-            data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
-            data.line.getDates()
-            data.line.getClosingValues()
-            data.enterStock=False 
+        enterOptions(data,event.x,event.y)
     elif data.portfolio:
         myPortfolio(data,event.x,event.y)
+    elif data.drawSolidLine:
+        margin = data.width/7
+        if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
+            (dates,values) = RBF.mainPredict(data.line.dates2,data.line.solidCloseValues,2)
+            data.line.addDates(dates)
+            data.line.predictedCloseValues(values)
     #else:
      #   if data.drawPredicted:
             # two days for now 
@@ -546,11 +493,12 @@ def myPortfolio(data,x,y):
     margin = data.width/15
     rowWidth = (data.height-2*margin)/11
     colWidth = (data.width-2*margin)/7
-    row = int(x//(2*rowWidth+margin))
-    col = int(y//(colWidth+margin))
+    col = int((x-margin)/colWidth)
+    row = int((y-margin-rowWidth)/rowWidth)
     if 0<=col<=3: 
-       ## print (row,col)
         data.pFPoint = (row,col)
+    else:
+        data.pFPoint = (-1,-1)
             
 
 def redrawAll(canvas, data):
@@ -575,45 +523,98 @@ def redrawAll(canvas, data):
 # press b to go back to original state
 # press p to predict  
 def keyPressed(event, data):
-    if event.keysym=="c":
-        data.drawCandle= True 
-        data.startState = False
-        data.drawSolidLine = False
     # no more of this-- use button 
-    elif event.keysym=="space":
+    if data.startState and event.keysym=="Return":
         data.Choice = True 
-        data.drawCandle= False  
         data.startState = False
-        data.drawSolidLine = False
-    elif event.keysym=="l":
-        data.drawCandle= False 
-        data.startState = False
-        data.drawSolidLine = True 
-    elif event.keysym=="s":
-        data.drawCandle= False
-        data.startState = True 
-        data.drawSolidLine = False
-    elif event.keysym=='p':
-        # PREDICTION
-        
-       # print ('1',data.line.dates2)
-        #print ('2',data.line.solidCloseValues)
-        (dates,values) = RBF.mainPredict(data.line.dates2,data.line.solidCloseValues,2)
-        data.line.addDates(dates)
-        data.line.predictedCloseValues(values)
-    if data.enterStock:
+    elif data.enterStock:
         letter = event.keysym
         controlInput(data,letter)
     elif data.portfolio:
         letter = event.keysym 
         (posit,categ)= data.pFPoint
-       ## print (categ)
-        if posit>=0 and posit<len(Portfolio.items[categ]):
+        #print (posit,categ)
+        if posit>=0 and categ>=0:
             if letter!='BackSpace':
                 Portfolio.items[categ][posit]+=letter
             elif letter=='BackSpace' and len(Portfolio.items[categ][posit])>0:
                 Portfolio.items[categ][posit]=Portfolio.items[categ][posit][:-1]
+
+def enterOptions(data,x,y):
+    if data.width/8<=x<=data.width*7/8 and data.height*2.5/10<=y<=data.width*3.5/10:
+        Option.word = ""
+        data.stockName = True
+        data.startDay,data.startYear,data.endMonth=False,False,False 
+        data.endDay,data.endYear,data.startMonth = False,False,False
+    if data.width*2/20<=x<=data.width*3.5/20 and data.height*11/20<=y<=data.height*13/20:
+        Option.startMonth = ""
+        data.startMonth = True 
+        data.startDay,data.startYear,data.endMonth=False,False,False 
+        data.endDay,data.endYear,data.stockName = False,False,False  
+    if data.width*4/20<=x<=data.width*5.5/20 and data.height*11/20<=y<=data.height*13/20:
+        Option.startDay = "" 
+        data.startDay = True 
+        data.startMonth,data.startYear,data.endMonth=False,False,False 
+        data.endDay,data.endYear,data.stockName = False,False,False       
+    if data.width*6/20<=x<=data.width*9/20 and data.height*11/20<=y<=data.height*13/20:
+        Option.startYear="" 
+        data.startYear = True 
+        data.startDay,data.startMonth,data.endMonth=False,False,False 
+        data.endDay,data.endYear,data.stockName = False,False,False
+    if data.width*11/20<=x<=data.width*12.5/20 and data.height*11/20<=y<=data.height*13/20:
+        Option.endMonth = "" 
+        data.endMonth = True 
+        data.startDay,data.startYear,data.startMonth=False,False,False 
+        data.endDay,data.endYear,data.stockName = False,False,False
+    if data.width*13/20<=x<=data.width*14.5/20 and data.height*11/20<=y<=data.height*13/20:
+        Option.endDay = ""
+        data.endDay = True 
+        data.startDay,data.startYear,data.endMonth=False,False,False 
+        data.startMonth,data.endYear,data.stockName = False,False,False
+    if data.width*15/20<=x<=data.width*18/20 and data.height*11/20<=y<=data.height*13/20:    
+        Option.endYear = ""
+        data.endYear = True 
+        data.startDay,data.startYear,data.endMonth=False,False,False 
+        data.endDay,data.startMonth,data.stockName = False,False,False
+    # buttons 
+    if data.width*1.5/10<=x<=data.width*3.5/10 and data.height*14/20<=y<=data.height*17/20:
+        data.drawCandle=True 
+        sMonth = Option.startMonth
+        sDay = Option.startYear
+        eMonth = Option.endMonth
+        eDay = Option.endDay
+        if len(Option.startMonth)==1: sMonth="0"+Option.startMonth
+        if len(Option.startDay)==1: sDay = "0"+Option.startDay
+        if len(Option.endMonth)==1: eMonth= "0"+Option.endMonth
+        if len(Option.endDay)==1: eDay = "0"+Option.endDay 
+        endDate = Option.endYear+"-"+eMonth+"-"+eDay 
+        startDate = Option.startYear+"-"+sMonth+"-"+sDay
         
+        data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
+        data.candle.getDates()
+        data.candle.getClosingValues()
+        data.candle.getScale()
+        data.candle.getLowValues()
+        data.candle.getHighValues()
+        data.candle.getOpenValues()
+        data.candle.getCloseValues()
+        data.enterStock=False
+    if (6.5*data.width/10)<=x<=(8.5*data.width/10) and (14*data.height/20)<=y<=(data.height*17/20):
+        data.drawSolidLine=True 
+        sMonth = Option.startMonth
+        sDay = Option.startYear
+        eMonth = Option.endMonth
+        eDay = Option.endDay
+        if len(Option.startMonth)==1: sMonth="0"+Option.startMonth
+        if len(Option.startDay)==1: sDay = "0"+Option.startDay
+        if len(Option.endMonth)==1: eMonth= "0"+Option.endMonth
+        if len(Option.endDay)==1: eDay = "0"+Option.endDay 
+        endDate = Option.endYear+"-"+eMonth+"-"+eDay 
+        startDate = Option.startYear+"-"+sMonth+"-"+sDay
+        data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
+        data.line.getDates()
+        data.line.getClosingValues()
+        data.enterStock=False         
             
 def controlInput(data,letter):
     if data.stockName:
