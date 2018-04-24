@@ -1,7 +1,9 @@
-from tkinter import *  
+from tkinter import * 
+import RBF   
 import string 
 import quandl
 import RegressionModel 
+import numpy as np 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
@@ -142,9 +144,13 @@ class Graph(object):
         self.company = company 
         self.width = width
         self.height = height 
-        self.dates = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate)
-        self.close = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate,column_index=4)
+        # THIS to go to predicted 
+        self.dates = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate)
+        self.dates2 = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=0)
+        #print (self.dates2)
+        self.close = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=4)
         self.displayDates = []
+        # need this to GO IN PREDICTED 
         self.solidCloseValues = []
         self.numOrigVal = 0
         self.numPredictedVal= 0
@@ -161,15 +167,15 @@ class Graph(object):
         #print(dates.index.tolist())
         #print(self.displayDates)
         #print (len(dates.index.tolist()))
-        for d in self.dates.index.tolist():
+        for d in list(self.dates.index):
             date = str(d)
             #print(date[:10])
-            print('hi')
             self.displayDates.append((date[:10]))
+        
     
-    def addDates(self,predicted):
-        for prediction in predicted:
-            self.displayDates.append(prediction[0])
+    def addDates(self,predictedDT):
+        for prediction in predictedDT:
+            self.displayDates.append(prediction)
             #print (self.displayDates)
     
     def getClosingValues(self):
@@ -182,12 +188,13 @@ class Graph(object):
             for i in range(len(self.close[val])):
                 self.solidCloseValues.append(self.close[val][i])
                 self.numOrigVal+=1
+        #####print (self.solidCloseValues)
         #return self.solidCloseValues
         #print(plotClosingVal)
 
     def predictedCloseValues(self,predicted):
         for prediction in predicted:
-            self.solidCloseValues.append(prediction[1])
+            self.solidCloseValues.append(prediction)
             self.numPredictedVal+=1
         
 
@@ -199,19 +206,19 @@ class Solid(Graph):
         connectLines = []
         newLines = []
         radius = 3
-        margin = self.width/7
-        increment = (self.width-2*margin)/len(self.displayDates)
+        margin = self.width/7        
         # background 
         canvas.create_rectangle(0,0,self.width,self.height,fill="light blue",width=0)
         canvas.create_rectangle(margin,margin,self.width-margin,self.height-margin,fill="white")
         startY = self.height-margin
         startingPt = margin/2
+        increment = (self.width-2*margin-startingPt)/len(self.displayDates)
         yBase = startY-startingPt
         minimum = int(min(self.solidCloseValues))
         # y-axis: values 
         #print(max(closingValues))
         #print(min(closingValues))
-        yIncrement = (self.height-2*margin)/len(self.displayDates)
+        yIncrement = (self.height-2*margin-startingPt)/len(self.displayDates)
         #print (yIncrement)
         scale = (max(self.solidCloseValues)-min(self.solidCloseValues))/len(self.displayDates)
         scale = int(scale)+1
@@ -223,12 +230,13 @@ class Solid(Graph):
             canvas.create_text(7*margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
         
         # draw dates
+        #print(self.displayDates)
         if self.displayDates[0][:4]!=self.displayDates[-1][:4]:
             dateTxt = "Years: " + self.displayDates[0][:4] + "-" + self.displayDates[-1][:4]
         else: 
             dateTxt = "Year: " + self.displayDates[0][:4]
         canvas.create_text(1.5*margin,margin-10,text= dateTxt,font="Dubai 15")
-    
+        
         # x-axis: dates and addpoints 
        # print('num predict',self.numPredictedVal)
        # print('dates',self.solidCloseValues)
@@ -285,9 +293,9 @@ class Solid(Graph):
 class CandleStick(Graph):
     def __init__(self,company,width,height,startDate,endDate):
         super().__init__(company,width,height,startDate,endDate)
-        self.open = quandl.get('WIKI/'+self.company,column_index=1)
-        self.high = quandl.get('WIKI/'+self.company,column_index=2)
-        self.low = quandl.get('WIKI/'+self.company,column_index=3)
+        self.open = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate,column_index=1)
+        self.high = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate,column_index=2)
+        self.low = quandl.get('WIKI/'+self.company,start_date=startDate,end_date=endDate,column_index=3,)
         self.convertOpen = []
         self.convertHigh = []
         self.convertLow = []
@@ -297,8 +305,8 @@ class CandleStick(Graph):
         self.startingPt = self.margin/2
         self.yBase = self.startY-self.startingPt
         self.minimum = None 
-        self.yIncrement = (self.height-2*self.margin)/len(self.dates)
-        self.increment = (self.width-2*self.margin)/len(self.dates)
+        self.yIncrement = (self.height-2*self.margin-self.startingPt)/len(self.dates)
+        self.increment = (self.width-2*self.margin-self.startingPt)/len(self.dates)
         self.portfolio = False 
         
         
@@ -315,6 +323,7 @@ class CandleStick(Graph):
                 highVal.append(self.high[val][i])
         self.maxVal = max(highVal)
         scale = (self.maxVal-self.minVal)/len(self.dates)
+        # change here?
         self.scale = int(scale)+1
         #print(self.maxVal,self.minVal,self.minimum)
         #print('low',lowVal)
@@ -329,8 +338,9 @@ class CandleStick(Graph):
                 newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
                 #print (value,newVal)
                 self.convertLow.append(newVal)
-       # print('converted low',self.convertLow)
-       # print ('low',self.low)
+        print (len(self.low))
+        #print('converted low',self.convertLow)
+        #print ('low',self.low)
         
     def getHighValues(self):
         for val in self.high:
@@ -343,16 +353,16 @@ class CandleStick(Graph):
         for val in self.open:
             for i in range(len(self.open[val])):
                 value = self.open[val][i]
-                print (value)
+               ## print (value)
                 newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
                 self.convertOpen.append(newVal)
-        print(self.convertOpen[0])
+        #print(self.convertOpen[0])
         
     def getCloseValues(self):
         for val in self.solidCloseValues:           
                 newVal = self.yBase-(self.yIncrement/self.scale)*(val-self.minimum)
                 self.convertClose.append(newVal)
-        print (self.solidCloseValues[0],self.convertClose[0])
+        ##print (self.solidCloseValues[0],self.convertClose[0])
         
     
     def drawCandleStick(self,canvas):
@@ -539,7 +549,7 @@ def myPortfolio(data,x,y):
     row = int(x//(2*rowWidth+margin))
     col = int(y//(colWidth+margin))
     if 0<=col<=3: 
-        print (row,col)
+       ## print (row,col)
         data.pFPoint = (row,col)
             
 
@@ -583,16 +593,21 @@ def keyPressed(event, data):
         data.drawCandle= False
         data.startState = True 
         data.drawSolidLine = False
-    elif event.keysym=="p":
-        data.drawPredicted = not data.drawPredicted 
-       
+    elif event.keysym=='p':
+        # PREDICTION
+        
+       # print ('1',data.line.dates2)
+        #print ('2',data.line.solidCloseValues)
+        (dates,values) = RBF.mainPredict(data.line.dates2,data.line.solidCloseValues,2)
+        data.line.addDates(dates)
+        data.line.predictedCloseValues(values)
     if data.enterStock:
         letter = event.keysym
         controlInput(data,letter)
     elif data.portfolio:
         letter = event.keysym 
         (posit,categ)= data.pFPoint
-        print (categ)
+       ## print (categ)
         if posit>=0 and posit<len(Portfolio.items[categ]):
             if letter!='BackSpace':
                 Portfolio.items[categ][posit]+=letter
