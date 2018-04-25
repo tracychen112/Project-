@@ -232,16 +232,19 @@ class Solid(Graph):
         # y-axis: values 
         #print(max(closingValues))
         #print(min(closingValues))
-        yIncrement = (self.height-2*margin-startingPt)/len(self.displayDates)
+        yIncrement = (self.height-2*margin-startingPt)/10
         #print (yIncrement)
-        scale = (max(self.solidCloseValues)-min(self.solidCloseValues))/len(self.displayDates)
-        scale = int(scale)+1
+        print ('max',max(self.solidCloseValues))
+        print ('min',min(self.solidCloseValues))
+        scale = (int(max(self.solidCloseValues))+1-min(self.solidCloseValues))/10
+        print ('scale',scale)
+        #scale = int(scale)+1
         #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
-        for i in range(len(self.displayDates)):
+        for i in range(10):
             yPos = yBase-i*yIncrement
             val = minimum + i*scale
             canvas.create_line(7*margin/8,yPos,margin,yPos)
-            canvas.create_text(7*margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
+            canvas.create_text(7*margin/8,yPos,text='%0.1f'%val,anchor= E,font="Calibri 10 bold")
         
         # draw dates
         #print(self.displayDates)
