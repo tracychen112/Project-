@@ -2,7 +2,6 @@ from tkinter import *
 import RBF   
 import string 
 import quandl 
-import numpy as np 
 import RegressionModel
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
