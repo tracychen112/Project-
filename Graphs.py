@@ -3,6 +3,7 @@ import RBF
 import string 
 import quandl 
 import numpy as np 
+import RegressionModel
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
@@ -163,10 +164,14 @@ class Graph(object):
         #print ('RBF',self.dates2)
         self.close = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=4)
         self.displayDates = []
+        self.lastIndex = len(self.dates)-1 
         # need this to GO IN PREDICTED 
         self.solidCloseValues = []
         self.numOrigVal = 0
-        self.numPredictedVal= 0
+        self.rbfVal = []
+        self.linearVal = []
+        self.numPredictedRBFVal= 0
+        self.numPredictedLinearVal = 0 
     
     # rows and number more to be predicted 
     def getDates(self):
@@ -206,10 +211,18 @@ class Graph(object):
         #return self.solidCloseValues
         #print(plotClosingVal)
 
-    def predictedCloseValues(self,predicted):
+    def predictedRBFValues(self,predicted):
+      #  self.rbfVal.append(self.solidCloseValues[-1])
         for prediction in predicted:
-            self.solidCloseValues.append(prediction)
-            self.numPredictedVal+=1
+            self.rbfVal.append(prediction)
+            self.numPredictedRBFVal+=1
+            
+    def predictedLinearValues(self,predicted):
+      #  self.linearVal.append(self.solidCloseValues[-1])
+        for prediction in predicted:
+            self.linearVal.append(prediction)
+            self.numPredictedLinearVal+=1
+            #print ('i went in predict linline')
         
 
 class Solid(Graph):
@@ -228,16 +241,22 @@ class Solid(Graph):
         startingPt = margin/2
         increment = (self.width-2*margin-startingPt)/len(self.displayDates)
         yBase = startY-startingPt
-        minimum = int(min(self.solidCloseValues))
         # y-axis: values 
         #print(max(closingValues))
         #print(min(closingValues))
         yIncrement = (self.height-2*margin-startingPt)/10
         #print (yIncrement)
-        print ('max',max(self.solidCloseValues))
-        print ('min',min(self.solidCloseValues))
-        scale = (int(max(self.solidCloseValues))+1-min(self.solidCloseValues))/10
-        print ('scale',scale)
+        #print ('max',max(self.solidCloseValues))
+        #print ('min',min(self.solidCloseValues))
+        allVal = []
+        allVal.extend(self.solidCloseValues)
+        if len(self.rbfVal)!=0: 
+            allVal.extend(self.rbfVal)
+            allVal.extend(self.linearVal)
+        minimum = int(min(allVal))            
+        scale = (int(max(allVal))+1-min(allVal))/10
+        
+        #print ('scale',scale)
         #scale = int(scale)+1
         #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
         for i in range(10):
@@ -257,31 +276,51 @@ class Solid(Graph):
         # x-axis: dates and addpoints 
        # print('num predict',self.numPredictedVal)
        # print('dates',self.solidCloseValues)
-        for i in range(len(self.displayDates)):
+        for i in range(len(self.solidCloseValues)):
             xPos = i*increment + margin + startingPt
             yPos = yBase-(yIncrement/scale)* (self.solidCloseValues[i]-minimum)
-            if i==self.numOrigVal-1:
-                newLines.append((xPos,yPos))
-                connectLines.append((xPos,yPos))
-            elif i>self.numOrigVal-1:
-                newLines.append((xPos,yPos))
-            else:
-                connectLines.append((xPos,yPos))
-            canvas.create_line(xPos,self.height-margin,xPos,self.height-7*margin/8)
+            connectLines.append((xPos,yPos))
+            
+            
             # stack overflow for angle 
+        for i in range(len(self.displayDates)):
+            xPos = i*increment + margin + startingPt
             if self.displayDates[i][5]=="0":
                 txt = self.displayDates[i][6:]
             else:
                 txt = self.displayDates[i][5:]
             canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90) 
+            canvas.create_line(xPos,self.height-margin,xPos,self.height-7*margin/8)
         
-        # draw predicted  
-        if len(newLines)>1:
-            canvas.create_line(newLines,width=3,fill="purple")
-            for i in range(len(newLines)):
-                if i!=0:
-                    point = newLines[i]
-                    canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill="pink")
+        # draw predicted
+        rbfLine = [connectLines[-1]]  
+        for i in range(len(self.rbfVal)):
+            xPos = (self.lastIndex+i)*increment + margin + startingPt
+            yPos = yBase-(yIncrement/scale)* (self.rbfVal[i]-minimum)
+            rbfLine.append((xPos,yPos))
+        
+        linLine = [connectLines[-1]]
+        for i in range(len(self.linearVal)):
+                xPos = (self.lastIndex+i)*increment + margin + startingPt
+                yPos = yBase-(yIncrement/scale)* (self.linearVal[i]-minimum)
+                linLine.append((xPos,yPos))
+        print('linline',linLine)
+        print ('rbfline',rbfLine)
+        if len(linLine)>1: canvas.create_line(linLine,width=3,fill='purple')
+        for point in linLine:
+            canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill='pink')
+        
+        if len(rbfLine)>1: canvas.create_line(rbfLine,width=3,fill='peach puff')
+        for point in rbfLine:
+            canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill='pink')
+
+               # point = self.linearVal[i]
+                #if i==0: 
+                 #   color = 'red'
+               # else:
+                #    color = 'pink'
+               # canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill=color)
+                    
         
         # drawing past lines and points
         canvas.create_line(connectLines,width=3)
@@ -490,9 +529,12 @@ def mousePressed(event, data):
                 #print ('input',data.line.dates2)
                # print ('line',data.line.dates2)
                 print( data.line.displayDates)
-                (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,2)
+                (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,5)
                 data.line.addDates(dates)
-                data.line.predictedCloseValues(values)
+                data.line.predictedRBFValues(values)
+                print('date',data.line.displayDates)
+                values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,5)
+                print('linValadded',data.line.predictedLinearValues(values))
         
         
 def myPortfolio(data,x,y):
