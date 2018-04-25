@@ -37,6 +37,7 @@ class Choice(object):
         # canvas.create_image(103*width/144,5*height/8,image="piggyBank.jpg")
         # text for graphs 
         canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
+        
 
      
 class Option(object):
@@ -84,7 +85,11 @@ class Option(object):
         canvas.create_text(width*2.5/10,height*15.5/20,text="Candlestick",font="Dubai 20",fill="black")
         canvas.create_text(width*7.5/10,height*15.5/20,text="Solid Line",font="Dubai 20",fill="black")
     
-        
+        # back button 
+        margin = width/7
+        canvas.create_rectangle(margin/3,margin/3,margin,margin*2/3,outline ='black',width=2)
+        canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
+        canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
         
 
 class Portfolio(object):
@@ -115,10 +120,6 @@ class Portfolio(object):
         rowWidth = (height-2*margin)/numRows
         columnWidth =  (width-2*margin)/numCols
         canvas.create_rectangle(0,0,width,height,fill="wheat1")
-        
-       # optional pie chart? 
-       # canvas.create_rectangle(width-width*.4,2*height/3,width-width/5,height*9/10,fill="cornflower blue")
-       # canvas.create_text(.3*width,.8*height,text="Visualize Portfolio",font="Dubai 20")
        
         # rows in table 
         for i in range(numRows):
@@ -157,8 +158,9 @@ class Graph(object):
         self.height = height 
         # THIS to go to predicted 
         self.dates = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate)
+       # print ('origdates',self.dates)
         self.dates2 = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=0)
-        #print (self.dates2)
+        #print ('RBF',self.dates2)
         self.close = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=4)
         self.displayDates = []
         # need this to GO IN PREDICTED 
@@ -195,7 +197,7 @@ class Graph(object):
         # Get numbers of a specific column 
         # CHECK CLOSING VALUES 
         # print(closingVal)
-        print (self.close)
+        #print (self.close)
         for val in self.close:
             for i in range(len(self.close[val])):
                 self.solidCloseValues.append(self.close[val][i])
@@ -335,7 +337,6 @@ class CandleStick(Graph):
                 highVal.append(self.high[val][i])
         self.maxVal = max(highVal)
         scale = (self.maxVal-self.minVal)/len(self.dates)
-        # change here?
         self.scale = int(scale)+1
         #print(self.maxVal,self.minVal,self.minimum)
         #print('low',lowVal)
@@ -350,7 +351,7 @@ class CandleStick(Graph):
                 newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
                 #print (value,newVal)
                 self.convertLow.append(newVal)
-        print (len(self.low))
+       # print (len(self.low))
         #print('converted low',self.convertLow)
         #print ('low',self.low)
         
@@ -365,17 +366,13 @@ class CandleStick(Graph):
         for val in self.open:
             for i in range(len(self.open[val])):
                 value = self.open[val][i]
-               ## print (value)
                 newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
                 self.convertOpen.append(newVal)
-        #print(self.convertOpen[0])
         
     def getCloseValues(self):
         for val in self.solidCloseValues:           
                 newVal = self.yBase-(self.yIncrement/self.scale)*(val-self.minimum)
                 self.convertClose.append(newVal)
-        ##print (self.solidCloseValues[0],self.convertClose[0])
-        
     
     def drawCandleStick(self,canvas):
     
@@ -461,8 +458,6 @@ def init(data):
     data.pFPoint = tuple()
 
 def mousePressed(event, data):
-    if data.startState:
-        pass 
     if data.Choice:
         if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
             data.enterStock=True 
@@ -471,24 +466,32 @@ def mousePressed(event, data):
             data.portfolio=True 
             data.Choice = False 
     elif data.enterStock:
+        margin = data.width/7
+        if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
+            data.Choice = True 
+            data.enterStock=False 
         enterOptions(data,event.x,event.y)
     elif data.portfolio:
+        margin = data.width/15
+        if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
+            data.Choice = True 
+            data.portfolio = False 
         myPortfolio(data,event.x,event.y)
-    elif data.drawSolidLine:
+    elif data.drawCandle or data.drawSolidLine:
         margin = data.width/7
-        if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
-            (dates,values) = RBF.mainPredict(data.line.dates2,data.line.solidCloseValues,2)
-            data.line.addDates(dates)
-            data.line.predictedCloseValues(values)
-    #else:
-     #   if data.drawPredicted:
-            # two days for now 
-            # HARDCODED SOME PREDICTION FOR APPPLE FIX!!!
-       #     predictedVal = RegressionModel.linearReg(2,5)
-        #    print (predictedVal)
-       #     data.line.addDates(predictedVal)
-        #    data.line.predictedCloseValues(predictedVal)
-            
+        if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
+            data.enterStock = True 
+            data.drawSolidLine = False
+        elif data.drawSolidLine:
+            if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
+                #print ('input',data.line.dates2)
+               # print ('line',data.line.dates2)
+                print( data.line.displayDates)
+                (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,2)
+                data.line.addDates(dates)
+                data.line.predictedCloseValues(values)
+        
+        
 def myPortfolio(data,x,y):
     margin = data.width/15
     rowWidth = (data.height-2*margin)/11
@@ -515,8 +518,7 @@ def redrawAll(canvas, data):
     elif data.portfolio:
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
-        
-        
+                
 
 # press s for solid line graph
 # press c for candlestick graph
@@ -579,6 +581,7 @@ def enterOptions(data,x,y):
     # buttons 
     if data.width*1.5/10<=x<=data.width*3.5/10 and data.height*14/20<=y<=data.height*17/20:
         data.drawCandle=True 
+        data.drawSolidLine = False 
         sMonth = Option.startMonth
         sDay = Option.startYear
         eMonth = Option.endMonth
@@ -589,7 +592,6 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        
         data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
         data.candle.getDates()
         data.candle.getClosingValues()
@@ -601,6 +603,7 @@ def enterOptions(data,x,y):
         data.enterStock=False
     if (6.5*data.width/10)<=x<=(8.5*data.width/10) and (14*data.height/20)<=y<=(data.height*17/20):
         data.drawSolidLine=True 
+        data.drawCandle = False 
         sMonth = Option.startMonth
         sDay = Option.startYear
         eMonth = Option.endMonth
