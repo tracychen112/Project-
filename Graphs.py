@@ -51,7 +51,7 @@ class Option(object):
     endYear = "year"
 
     @staticmethod
-    def draw(canvas,width,height):
+    def draw(canvas,width,height,data):
         canvas.create_rectangle(0,0,width,height,fill="light grey",width=0)
         # stock name 
         canvas.create_text(width/2,height/5,text="Enter a stock",font="Dubai 20")
@@ -92,6 +92,10 @@ class Option(object):
         canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
         canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
         
+       # print ( 'error state', data.errorState)
+        if data.errorState:
+            canvas.create_text(width/2,8*height/9,text='Please Enter Valid Data',font= 'Dubai 20',fill='red')
+         #   print ('here')
 
 class Portfolio(object):
     # to add in keypressed
@@ -159,9 +163,6 @@ class Graph(object):
         self.height = height 
         # THIS to go to predicted 
         self.dates = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate)
-       # print ('origdates',self.dates)
-        self.dates2 = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=0)
-        #print ('RBF',self.dates2)
         self.close = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=4)
         self.displayDates = []
         self.lastIndex = len(self.dates)-1 
@@ -497,6 +498,7 @@ def init(data):
     data.endYear = False
     data.stockName = False
     data.portfolio = False 
+    data.errorState = False 
     data.pFPoint = tuple()
 
 def mousePressed(event, data):
@@ -528,13 +530,14 @@ def mousePressed(event, data):
             if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
                 #print ('input',data.line.dates2)
                # print ('line',data.line.dates2)
-                print( data.line.displayDates)
-                (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,5)
+               # print( data.line.displayDates)
+                (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,2)
                 data.line.addDates(dates)
                 data.line.predictedRBFValues(values)
                 print('date',data.line.displayDates)
-                values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,5)
+                values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,2)
                 print('linValadded',data.line.predictedLinearValues(values))
+                
         
         
 def myPortfolio(data,x,y):
@@ -555,11 +558,20 @@ def redrawAll(canvas, data):
     elif data.Choice:
         Choice.draw(canvas,data.width,data.height)
     elif data.enterStock:
-        Option.draw(canvas,data.width,data.height)
+        Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawCandle==True:
-        data.candle.drawCandleStick(canvas)
+        try:
+            data.candle.drawCandleStick(canvas)
+            data.errorState = False 
+        except:
+            data.errorState = True 
+            Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawSolidLine==True:
-        data.line.drawSolid(canvas)
+        try:
+            data.line.drawSolid(canvas)
+        except:
+            data.errorState = True 
+            Option.draw(canvas,data.width,data.height,data)
     elif data.portfolio:
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
@@ -637,15 +649,20 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
-        data.candle.getDates()
-        data.candle.getClosingValues()
-        data.candle.getScale()
-        data.candle.getLowValues()
-        data.candle.getHighValues()
-        data.candle.getOpenValues()
-        data.candle.getCloseValues()
-        data.enterStock=False
+        try:
+            data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
+            data.candle.getDates()
+            data.candle.getClosingValues()
+            data.candle.getScale()
+            data.candle.getLowValues()
+            data.candle.getHighValues()
+            data.candle.getOpenValues()
+            data.candle.getCloseValues()
+            data.enterStock=False
+            data.errorState = False 
+        except:
+            data.errorState = True
+             
     if (6.5*data.width/10)<=x<=(8.5*data.width/10) and (14*data.height/20)<=y<=(data.height*17/20):
         data.drawSolidLine=True 
         data.drawCandle = False 
@@ -659,11 +676,15 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
-        data.line.getDates()
-        data.line.getClosingValues()
-        data.enterStock=False         
-            
+        try:
+            data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
+            data.line.getDates()
+            data.line.getClosingValues()
+            data.enterStock=False
+            data.errorState = False          
+        except:
+            print ('enter candle except')
+            data.errorState = True 
 def controlInput(data,letter):
     if data.stockName:
         if letter=="BackSpace" and len(Option.word)>0:
