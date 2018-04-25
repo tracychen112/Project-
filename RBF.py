@@ -1,5 +1,6 @@
 #This code just implements the k-means clustering algorithm and computes the standard deviations. 
 #It references to https://pythonmachinelearning.pro/using-neural-networks-for-regression-radial-basis-function-networks/
+
 from tkinter import *
 import quandl 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
@@ -18,47 +19,51 @@ print (origPrices)
 predDays = 2
 
 def mainPredict(origDates,origPrices,predDays):
-    print (origDates)
+   # print (origDates)
     dates = convertDates(origDates)
-    newDates = list(range(dates[-1]+1,predDays+1))
+   # newDates = list(range(dates[-1]+1,predDays+1))
+    print ('dates',dates)
     prices = copy.copy(origPrices)
+    print ('prices',prices)
     rbfNet = RBFNet(lr=1e-2, k=2)
     rbfNet.fit(dates, prices)
     newDates = [i for i in range(dates[-1]+1,dates[-1]+1+predDays)]
     newDateIP = []
     for i in newDates:
-        month = i//31 + 2
+        month = i//31 + 1
         day = i%31
         year = '2018'
         #year = i//365+ dates[0]
         date = year + '-'+str(month)+'-'+str(day)
-        print (date)
+       # print (date)
         newDateIP.append(date)
+    print ('new date predict',newDates)
     predictedPrices = rbfNet.predict(newDates)
-    datesLst = formatDates(origDates)
+    print ('predicted prices',predictedPrices)
+   # datesLst = formatDates(origDates)
     #print(len(list(origDates.index)),len(predictedPrices))
     #print (predictedPrices)
     #print ('dates',dates)
     #print ('prices',prices)
-    print (predictedPrices)
+    #print (predictedPrices)
     return (newDateIP,predictedPrices)
     
-#year2 - year1 *365 + (month2-startmonth)* 31 + day 
+#year2 - year1 *365 + (month2-startmonth)* 31 + day
+''' 
 def formatDates(origDates):
     datesLst = []
-    for d in origDates.index.tolist():
+    for d in origDates:
         #print(d)
-        date = str(d)
         datesLst.append(date[:10])
     return datesLst
+'''
     
 def convertDates(origDates):
     newDates = []
-    year = int(str(list(origDates.index)[0])[:4])
-    for d in list(origDates.index):
-        date = str(d) 
-        month = int(date[5:7])-1
-        days = int(date[8:10])
+    #year = int(str(list(origDates.index)[0])[:4])
+    for d in origDates:
+        month = int(d[5:7])-1
+        days = int(d[8:10])
         #year = (int(date[:4])-year)*365 
         #print('month',date[5:7])
         #print('day',date[8:10])
@@ -70,8 +75,8 @@ def rbf(x, c, s):
 
 
 # https://codeselfstudy.com/blogs/how-to-calculate-standard-deviation-in-python
+# Code taken from URL above 
 def standard_deviation(lst, population=True):
-    """Calculates the standard deviation for a list of numbers."""
     num_items = len(lst)
     mean = sum(lst) / num_items
     differences = [x - mean for x in lst]
@@ -85,7 +90,10 @@ def standard_deviation(lst, population=True):
     sd = math.sqrt(variance)
     return sd
 
-
+# https://pythonmachinelearning.pro/using-neural-networks-for-regression-radial-basis-function-networks/
+# Rest of code rewritten from algorithm described from URL above. 
+# Modified numpy to standard python
+# also simplified code by only handling 1D list instead of vectors
 def kmeans(X, k):
     clusters = []
     
@@ -102,13 +110,9 @@ def kmeans(X, k):
     distances = [[0 for i in range(len(clusters))] for j in range(len(X))]
 
     v = 0
-    while not converged:
-
-        """
-        compute distances for each cluster center to each point 
-        where (distances[i, j] represents the distance between the ith point and jth cluster)
-        """
-        
+    while not converged:    
+        #compute distances for each cluster center to each point 
+        #where (distances[i, j] represents the distance between the ith point and jth cluster)        
         # calculate distance
         for i in range(len(X)):
             for j in range(len(clusters)):
@@ -188,7 +192,6 @@ def kmeans(X, k):
 
 
 class RBFNet(object):
-    """Implementation of a Radial Basis Function Network"""
     def __init__(self, k=2, lr=0.01, epochs=100, rbf=rbf, inferStds=True):
         self.k = k
         self.lr = lr
@@ -196,9 +199,8 @@ class RBFNet(object):
         self.rbf = rbf
         self.inferStds = inferStds
         
-        #self.w = np.random.randn(k).tolist()
-        #self.b = np.random.randn(1).tolist()
-        
+        # https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+        # box muller method 
         self.w = []
         if int(k)%2==1:
             numGenerate = int(k)+1
@@ -219,7 +221,8 @@ class RBFNet(object):
         z2 = math.sqrt(-2*math.log(U1,math.e))*math.sin(2*math.pi*U2)
         self.b = [random.choice([z1,z2])]
         
-
+    # code taken from https://pythonmachinelearning.pro/using-neural-networks-for-regression-radial-basis-function-networks/
+    # converted numpy into standard python 
     def fit(self, X, y):
        
         # compute stds from data
@@ -245,7 +248,7 @@ class RBFNet(object):
 
                 self.b[0] = self.b[0] - self.lr * error
 
-
+    
     def predict(self, X):
         y_pred = []
         for i in range(len(X)):
