@@ -1,4 +1,5 @@
 from tkinter import * 
+import hashlib 
 import RBF   
 import string 
 import quandl 
@@ -574,9 +575,8 @@ def mousePressed(event, data):
                 (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,2)
                 data.line.addDates(dates)
                 data.line.predictedRBFValues(values)
-                print('date',data.line.displayDates)
                 values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,2)
-                print('linValadded',data.line.predictedLinearValues(values))
+                
             
 def enterUsername(letter):
     if letter in string.ascii_letters or letter in string.digits:
@@ -629,7 +629,7 @@ def myPortfolio(data,x,y):
     col = int((x)/colWidth)
     if col==8:
         col = (x)/colWidth
-        if col<=colWidth/2:
+        if col<=8.5:
             try:
                 data.candle = CandleStick(Portfolio.items[0][row],data.width,data.height,Graph.startDate,Graph.endDate)
                 data.candle.getDates()
@@ -639,8 +639,8 @@ def myPortfolio(data,x,y):
                 data.candle.getHighValues()
                 data.candle.getOpenValues()
                 data.candle.getCloseValues()
-                print('dates',data.candle.displayDates)
                 data.drawCandle = True 
+                data.drawSolidLine = False 
                 data.enterStock = False 
                 data.portfolio = False 
             except:
@@ -649,11 +649,13 @@ def myPortfolio(data,x,y):
         else:
             try:
                 print('col2',col)
-                data.line = Solid(Portfolio.items[0][row],data.width,data.height,Porfolio.startDate,Portfolio.endDate)
+                data.line = Solid(Portfolio.items[0][row],data.width,data.height,Graph.startDate,Graph.endDate)
                 data.line.getDates()
+                data.line.getClosingValues()
                 data.drawSolidLine = True 
+                data.drawCandle = False 
                 data.enterStock = False 
-                data.portfolio = False 
+                data.portfolio = False
             except:
                 print('failed')
                 pass 
@@ -675,22 +677,20 @@ def redrawAll(canvas, data):
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
-        #try:
-        print('enter')
-        print('start',data.candle.startDate)
-        print('end',data.candle.endDate)
-        print('dates',data.candle.displayDates)
-        data.candle.drawCandleStick(canvas)
-        data.errorState = False 
-        #except:
-        data.errorState = True 
-        Option.draw(canvas,data.width,data.height,data)
+        try:
+            
+            data.candle.drawCandleStick(canvas)
+            print('drew')
+            data.errorState = False 
+        except:
+            data.errorState = True 
+            Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawSolidLine==True:
-       # try:
-        data.line.drawSolid(canvas)
-       # except:
-        data.errorState = True 
-        Option.draw(canvas,data.width,data.height,data)
+        try:
+            data.line.drawSolid(canvas)
+        except:
+            data.errorState = True 
+            Option.draw(canvas,data.width,data.height,data)
     
                 
 
@@ -820,7 +820,7 @@ def enterOptions(data,x,y):
             data.enterStock=False
             data.errorState = False          
         except:
-            print ('enter candle except')
+          
             data.errorState = True 
             
 def controlInput(data,letter):
@@ -859,8 +859,15 @@ def controlInput(data,letter):
             Option.endYear=Option.endYear[:-1]
         elif letter in string.digits and len(Option.endYear)<4:
             Option.endYear+=letter
-            
-    
+
+# password and username hashing https://pythonprogramming.net/password-hashing-flask-tutorial/            
+#import hashlib 
+#username = input('username: ')
+#password = input('password: ')
+#together = username+password
+#h = hashlib.md5(together.encode())
+#print(h.hexdigest())
+   
          
 def timerFired(data):
     pass 
