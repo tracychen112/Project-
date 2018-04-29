@@ -3,6 +3,7 @@ import RBF
 import string 
 import quandl 
 import RegressionModel
+import Earnings 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
@@ -34,7 +35,7 @@ class Choice(object):
         # View earnings/portfolio 
         canvas.create_text(103*width/144,2*height/7,text="My Earnings",font="Dubai 35",fill="black")
         canvas.create_rectangle(5*width/9,3*height/8,7*width/8,7*height/8,fill="white")
-        # canvas.create_image(103*width/144,5*height/8,image="piggyBank.jpg")
+        #canvas.create_image(103*width/144,5*height/8,image="piggyBank.jpg")
         # text for graphs 
         canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
         
@@ -99,49 +100,51 @@ class Option(object):
 class Portfolio(object):
     # to add in keypressed
     # stocks: 0, moves: 1, numShares:2, endDate:3, endPrices:4, earnings:5
-    items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
-    
+    items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10,6:[""]*10,7:[""]*10}
+    earnings = '' 
     @staticmethod
     def drawItems(canvas,width,height):
         margin=width/15
         numRows = 11
-        numCols = 7
+        numCols = 9
         rowWidth = (height-2*margin)/numRows
-        colWidth =  (width-2*margin)/numCols
+        colWidth =  (width)/numCols
         startX = rowWidth/2
         startY = colWidth/2
         for categ in Portfolio.items:
             for i in range(len(Portfolio.items[categ])):
-                canvas.create_text(margin+startY+categ*(colWidth),margin+startX+rowWidth+i*(rowWidth),text = Portfolio.items[categ][i],font='Dubai 10')
-
+                canvas.create_text(startY+categ*(colWidth),2*margin+startX+rowWidth+i*(rowWidth),text = Portfolio.items[categ][i],font='Dubai 10')
+        canvas.create_text(10,2*margin,text='Earnings: '+Portfolio.earnings,anchor=SW,font='Dubai 15')
     @staticmethod
     def drawEntry(canvas,width,height):
         # background
-        title = ['Stock','Buy/Short','# of Shares','End date','End date price','Earnings','Graph']
+        title = ['Stock','Buy/Short','# of Shares','Current Price','Payment','Future date','Future date price','Earnings','Graph']
         margin=width/15
         numRows = 11
-        numCols = 7
+        numCols = 9
         rowWidth = (height-2*margin)/numRows
-        columnWidth =  (width-2*margin)/numCols
-        canvas.create_rectangle(0,0,width,height,fill="wheat1")
+        columnWidth =  (width)/numCols
+        canvas.create_rectangle(0,0,width,height,fill="white")
        
         # rows in table 
         for i in range(numRows):
-            canvas.create_rectangle(margin,margin+i*rowWidth,width-margin,margin+(i+1)*rowWidth,fill='light grey')
+            canvas.create_rectangle(0,2*margin+i*rowWidth,width,2*margin+(i+1)*rowWidth,fill='light grey')
         # columns in table 
         for i in range(numCols):
-            canvas.create_line((i+1)*columnWidth+margin,margin,(i+1)*columnWidth+margin,width-3.12*margin)
+            canvas.create_line((i+1)*columnWidth,2*margin,(i+1)*columnWidth,height)
             
         # drawing things in table 
         for i in range(numCols):
-            canvas.create_text(i*columnWidth+margin+columnWidth/2,rowWidth/2+margin,text=title[i],font="Calibri 10 bold")
+            if len(title[i])>13:
+                title[i]=title[i][:11] + '\n'+title[i][11:]
+            canvas.create_text(i*columnWidth+columnWidth/2,rowWidth/2+2*margin,text=title[i],font="Calibri 8 bold")
         
         # graph buttons
         for i in range(1,numRows):
-            canvas.create_rectangle(width-margin-columnWidth,margin+i*rowWidth,width-margin-columnWidth/2,margin+(i+1)*rowWidth,fill="light yellow")
-            canvas.create_text(width-margin-3*columnWidth/4,margin+rowWidth*(2*i+1)/2,text='Candle',font='Calibri 7') 
-            canvas.create_rectangle(width-margin-columnWidth/2,margin+i*rowWidth,width-margin,margin+(i+1)*rowWidth,fill='light pink')
-            canvas.create_text(width-margin-columnWidth/4,margin+rowWidth*(2*i+1)/2,text="Solid",font='Calibri 7')
+            canvas.create_rectangle(width-columnWidth,i*rowWidth+2*margin,width-columnWidth/2,(i+1)*rowWidth+2*margin,fill="light yellow")
+            canvas.create_text(width-3*columnWidth/4,2*margin+rowWidth*(2*i+1)/2,text='Candle',font='Calibri 7') 
+            canvas.create_rectangle(width-columnWidth/2,margin*2+i*rowWidth,width,margin*2+(i+1)*rowWidth,fill='light pink')
+            canvas.create_text(width-columnWidth/4,2*margin+rowWidth*(2*i+1)/2,text="Solid",font='Calibri 7')
         
         # calculate and save buttons
         canvas.create_rectangle(width-4.75*margin,margin/6,width-2.875*margin,margin*5/6,fill="light blue")
@@ -155,7 +158,11 @@ class Portfolio(object):
         canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
 
 
+
 class Graph(object):
+    startDate = ''
+    endDate = ''
+    
     def __init__(self,company,width,height,startDate,endDate):
         self.company = company 
         self.width = width
@@ -163,6 +170,9 @@ class Graph(object):
         # THIS to go to predicted 
         self.dates = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate)
         self.close = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=4)
+        # for earnings 
+        Graph.startDate = startDate
+        Graph.endDate = endDate
         self.displayDates = []
         self.lastIndex = len(self.dates)-1 
         # need this to GO IN PREDICTED 
@@ -172,6 +182,7 @@ class Graph(object):
         self.linearVal = []
         self.numPredictedRBFVal= 0
         self.numPredictedLinearVal = 0 
+        
     
     # rows and number more to be predicted 
     def getDates(self):
@@ -499,6 +510,8 @@ def init(data):
     data.portfolio = False 
     data.errorState = False 
     data.pFPoint = tuple()
+    # 1st visit to portfolio uploads info from file saved from last time
+    data.visited = False 
 
 def mousePressed(event, data):
     if data.Choice:
@@ -507,7 +520,11 @@ def mousePressed(event, data):
             data.Choice = False 
         elif 5*data.width/9<=event.x<=7*data.width/8 and 3*data.height/8<=event.y<=7*data.height/8:
             data.portfolio=True 
+            data.enterStock=False
             data.Choice = False 
+            if not data.visited: 
+                readFile('documentUsers.txt')
+                data.visited = True 
     elif data.enterStock:
         margin = data.width/7
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
@@ -519,6 +536,10 @@ def mousePressed(event, data):
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
             data.Choice = True 
             data.portfolio = False 
+        elif data.width-2.875*margin<=event.x<=data.width-margin and margin/6<=event.y<=margin*5/6:
+            saveInfo('documentUsers.txt',Portfolio.items)
+        elif data.width-4.75*margin<=event.x<=data.width-2.875*margin and margin/6<=event.y<=margin*5/6:
+            Earnings.calculate()
         myPortfolio(data,event.x,event.y)
     elif data.drawCandle or data.drawSolidLine:
         margin = data.width/7
@@ -527,9 +548,6 @@ def mousePressed(event, data):
             data.drawSolidLine = False
         elif data.drawSolidLine:
             if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
-                #print ('input',data.line.dates2)
-               # print ('line',data.line.dates2)
-               # print( data.line.displayDates)
                 (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,2)
                 data.line.addDates(dates)
                 data.line.predictedRBFValues(values)
@@ -537,19 +555,69 @@ def mousePressed(event, data):
                 values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,2)
                 print('linValadded',data.line.predictedLinearValues(values))
                 
-        
-        
+# 112 website format 
+# writes contents into file                
+def saveInfo(path,contents):
+    with open(path, "wt") as f:
+        headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
+        format = ''
+        for row in contents:
+            format+=headers[row]
+            for i in range(len(contents[row])):
+                format+=contents[row][i] + " "  
+            format+='\n'
+        f.write(format)
+
+# reading info and reprinting out 
+def readFile(path):
+   # items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
+    headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
+    with open(path, "rt") as f:
+        contents = f.read()
+        index = 0
+        for line in contents.splitlines():
+            info = line[len(headers[index]):]
+            for i in range(len(info.split(" "))-2):
+                Portfolio.items[index][i] = info.split(" ")[i]
+            index+=1
+            
+
+           
 def myPortfolio(data,x,y):
     margin = data.width/15
     rowWidth = (data.height-2*margin)/11
-    colWidth = (data.width-2*margin)/7
-    col = int((x-margin)/colWidth)
-    row = int((y-margin-rowWidth)/rowWidth)
-    if 0<=col<=3: 
-        data.pFPoint = (row,col)
+    colWidth = (data.width)/9
+    row=int((y-2*margin-rowWidth)/rowWidth)
+    col = int((x)/colWidth)
+    if col==8:
+        col = (x)/colWidth
+        if col<=colWidth/2:
+            try:
+                print('col1', col)
+                print('start date', Graph.startDate)
+                print('start date', Graph.endDate)
+                print('comp name',Portfolio.items[0])
+                print('comp name n', Portfolio.items[0][1])
+                print( 'col', int(col))
+                data.candle = CandleStick(Portfolio.items[0][row],data.width,data.height,Graph.startDate,Graph.endDate)
+                data.drawCandle = True 
+                data.enterStock = False 
+            except:
+                pass 
+        else:
+            try:
+                print('col2',col)
+                data.line = Solid(Portfolio.items[0][row],data.width,data.height,Porfolio.startDate,Portfolio.endDate)
+                data.drawSolidLine = True 
+                data.enterStock = False 
+            except:
+                pass 
     else:
-        data.pFPoint = (-1,-1)
-            
+        row = int((y-2*margin-rowWidth)/rowWidth)
+    data.pFPoint = (row,col)
+
+#width-columnWidth,i*rowWidth+2*margin,width-columnWidth/2,(i+1)*rowWidth+2*margin (Y)
+#width-columnWidth/2,margin*2+i*rowWidth,width,margin*2+(i+1)*rowWidth (P)
 
 def redrawAll(canvas, data):
     if data.startState:
@@ -558,6 +626,9 @@ def redrawAll(canvas, data):
         Choice.draw(canvas,data.width,data.height)
     elif data.enterStock:
         Option.draw(canvas,data.width,data.height,data)
+    elif data.portfolio:
+        Portfolio.drawEntry(canvas,data.width,data.height)
+        Portfolio.drawItems(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
         try:
             data.candle.drawCandleStick(canvas)
@@ -571,9 +642,7 @@ def redrawAll(canvas, data):
         except:
             data.errorState = True 
             Option.draw(canvas,data.width,data.height,data)
-    elif data.portfolio:
-        Portfolio.drawEntry(canvas,data.width,data.height)
-        Portfolio.drawItems(canvas,data.width,data.height)
+    
                 
 
 # press s for solid line graph
@@ -592,12 +661,27 @@ def keyPressed(event, data):
         letter = event.keysym 
         (posit,categ)= data.pFPoint
         #print (posit,categ)
-        if posit>=0 and categ>=0:
-            if letter!='BackSpace':
-                Portfolio.items[categ][posit]+=letter
-            elif letter=='BackSpace' and len(Portfolio.items[categ][posit])>0:
-                Portfolio.items[categ][posit]=Portfolio.items[categ][posit][:-1]
+        enterPortfolio(posit,categ,letter)
 
+        
+
+def enterPortfolio(posit,categ,letter):
+    if posit>=0:
+        if letter=='BackSpace' and len(Portfolio.items[categ][posit])>0:
+            Portfolio.items[categ][posit]=Portfolio.items[categ][posit][:-1]
+        elif categ==0 or categ==1:
+            if letter in string.ascii_letters:
+                Portfolio.items[categ][posit]+=letter.upper()
+        elif categ==2:
+            if letter.isdigit():
+                Portfolio.items[categ][posit]+=letter
+        elif categ==5:
+            if letter=='slash':
+                Portfolio.items[categ][posit]+="/"
+            elif letter.isdigit():
+                Portfolio.items[categ][posit]+=letter    
+        
+            
 def enterOptions(data,x,y):
     if data.width/8<=x<=data.width*7/8 and data.height*2.5/10<=y<=data.width*3.5/10:
         Option.word = ""
@@ -684,6 +768,7 @@ def enterOptions(data,x,y):
         except:
             print ('enter candle except')
             data.errorState = True 
+            
 def controlInput(data,letter):
     if data.stockName:
         if letter=="BackSpace" and len(Option.word)>0:
@@ -730,7 +815,7 @@ def timerFired(data):
 # use the run function as-is   
 ####################################
 
-def run(width=300, height=300):
+def run(width=1000, height=900):
     def redrawAllWrapper(canvas, data):
         canvas.delete(ALL)
         canvas.create_rectangle(0, 0, data.width, data.height,
@@ -774,4 +859,4 @@ def run(width=300, height=300):
 
 
 
-run(700, 600)
+run(900, 800)
