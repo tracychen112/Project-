@@ -10,7 +10,9 @@ quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 
 
 class Cover(object):
-
+    username = ''
+    password = ''
+    passwordShown = ''
     @staticmethod
     def draw(canvas,width,height):
         fractW = width/5
@@ -22,6 +24,10 @@ class Cover(object):
         canvas.create_text(width/2,height/2-fractL,text="Username ",anchor=NE,font="Dubai 20",fill="black")
         canvas.create_text(width/2,height/2+fractL,text="Password ",anchor=NE,font= 'Dubai 20',fill="black")
         canvas.create_text(width/2,height*3/4,text="'Press enter to login'",font='Dubai 20',fill='black')
+        
+        # appearance of username and password 
+        canvas.create_text((width+fractW)/2,(height-fractL)/2,text=Cover.username,font='Dubai 20',fill='black')
+        canvas.create_text((width+fractW)/2,(height+3*fractL)/2,text=Cover.passwordShown,font='Dubai 20',fill='black')
         # Dubai
         
 class Choice(object):
@@ -182,6 +188,9 @@ class Graph(object):
         self.linearVal = []
         self.numPredictedRBFVal= 0
         self.numPredictedLinearVal = 0 
+        #
+        self.startDate = startDate
+        self.endDate = endDate 
         
     
     # rows and number more to be predicted 
@@ -512,8 +521,22 @@ def init(data):
     data.pFPoint = tuple()
     # 1st visit to portfolio uploads info from file saved from last time
     data.visited = False 
+    data.password = False 
+    data.username = False 
 
 def mousePressed(event, data):
+    if data.startState:
+        fractW = data.width/5
+        fractL = data.width/20 
+        if data.width/2<=event.x<=data.width/2+fractW and data.height/2-fractL<=event.y<=data.height/2:
+            data.username = True 
+            data.password = False             
+        elif data.width/2<=event.x<=data.width/2+fractW and data.height/2+fractL<=event.y<=data.height/2+2*fractL:
+            data.password = True 
+            data.username = False 
+        else:
+            data.password= False
+            data.username = False 
     if data.Choice:
         if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
             data.enterStock=True 
@@ -554,7 +577,22 @@ def mousePressed(event, data):
                 print('date',data.line.displayDates)
                 values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,2)
                 print('linValadded',data.line.predictedLinearValues(values))
-                
+            
+def enterUsername(letter):
+    if letter in string.ascii_letters or letter in string.digits:
+        print('enter username')
+        Cover.username+=letter
+    elif letter=="BackSpace" and len(Cover.username)>0:
+        Cover.username=Cover.username[:-1]
+
+def enterPassword(letter):
+    if letter in string.ascii_letters or letter in string.digits:
+        Cover.password+=letter
+        Cover.passwordShown+='*'
+    elif letter=="BackSpace" and len(Cover.password)>0:
+        Cover.password=Cover.password[:-1]
+        Cover.passwordShown=Cover.passwordShown[:-1]
+    
 # 112 website format 
 # writes contents into file                
 def saveInfo(path,contents):
@@ -593,24 +631,31 @@ def myPortfolio(data,x,y):
         col = (x)/colWidth
         if col<=colWidth/2:
             try:
-                print('col1', col)
-                print('start date', Graph.startDate)
-                print('start date', Graph.endDate)
-                print('comp name',Portfolio.items[0])
-                print('comp name n', Portfolio.items[0][1])
-                print( 'col', int(col))
                 data.candle = CandleStick(Portfolio.items[0][row],data.width,data.height,Graph.startDate,Graph.endDate)
+                data.candle.getDates()
+                data.candle.getClosingValues()
+                data.candle.getScale()
+                data.candle.getLowValues()
+                data.candle.getHighValues()
+                data.candle.getOpenValues()
+                data.candle.getCloseValues()
+                print('dates',data.candle.displayDates)
                 data.drawCandle = True 
                 data.enterStock = False 
+                data.portfolio = False 
             except:
+                print('failed')
                 pass 
         else:
             try:
                 print('col2',col)
                 data.line = Solid(Portfolio.items[0][row],data.width,data.height,Porfolio.startDate,Portfolio.endDate)
+                data.line.getDates()
                 data.drawSolidLine = True 
                 data.enterStock = False 
+                data.portfolio = False 
             except:
+                print('failed')
                 pass 
     else:
         row = int((y-2*margin-rowWidth)/rowWidth)
@@ -630,18 +675,22 @@ def redrawAll(canvas, data):
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
-        try:
-            data.candle.drawCandleStick(canvas)
-            data.errorState = False 
-        except:
-            data.errorState = True 
-            Option.draw(canvas,data.width,data.height,data)
+        #try:
+        print('enter')
+        print('start',data.candle.startDate)
+        print('end',data.candle.endDate)
+        print('dates',data.candle.displayDates)
+        data.candle.drawCandleStick(canvas)
+        data.errorState = False 
+        #except:
+        data.errorState = True 
+        Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawSolidLine==True:
-        try:
-            data.line.drawSolid(canvas)
-        except:
-            data.errorState = True 
-            Option.draw(canvas,data.width,data.height,data)
+       # try:
+        data.line.drawSolid(canvas)
+       # except:
+        data.errorState = True 
+        Option.draw(canvas,data.width,data.height,data)
     
                 
 
@@ -651,9 +700,14 @@ def redrawAll(canvas, data):
 # press p to predict  
 def keyPressed(event, data):
     # no more of this-- use button 
-    if data.startState and event.keysym=="Return":
-        data.Choice = True 
-        data.startState = False
+    if data.startState:
+        if data.username:
+            enterUsername(event.keysym)
+        elif data.password:
+            enterPassword(event.keysym)
+        elif event.keysym=="Return":
+            data.Choice = True 
+            data.startState = False
     elif data.enterStock:
         letter = event.keysym
         controlInput(data,letter)
