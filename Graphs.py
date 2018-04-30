@@ -108,6 +108,9 @@ class Portfolio(object):
     # to add in keypressed
     # stocks: 0, moves: 1, numShares:2, endDate:3, endPrices:4, earnings:5
     items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10,6:[""]*10,7:[""]*10}
+    day = ''
+    month = ''
+    year = ''
     earnings = '' 
     @staticmethod
     def drawItems(canvas,width,height):
@@ -132,6 +135,21 @@ class Portfolio(object):
         rowWidth = (height-2*margin)/numRows
         columnWidth =  (width)/numCols
         canvas.create_rectangle(0,0,width,height,fill="white")
+       
+       #width-4.75*margin,margin/6,width-2.875*margin,margin*5/6
+       #width-2.875*margin,margin/6,width-margin,margin*5/6
+        # start date to set range for training 
+        canvas.create_text(width-2.875*margin,margin*1.2,text="Training (starting) date",font='Dubai 9')
+        # month
+        canvas.create_rectangle(width-4.55*margin,margin*1.35,width-3.78*margin,margin*1.8,fill='bisque',width=1.2)
+        # day 
+        canvas.create_rectangle(width-3.65*margin,margin*1.35,width-2.88*margin,margin*1.8,fill='bisque',width=1.2)
+        # year 
+        canvas.create_rectangle(width-2.75*margin,margin*1.35,width-1.3*margin,margin*1.8,fill='bisque',width=1.2)
+        # text in boxes
+        canvas.create_text(width-4.15*margin,1.575*margin,text=Portfolio.month,font='Dubai 8')
+        canvas.create_text(width-3.265*margin,1.575*margin,text=Portfolio.day,font='Dubai 8')
+        canvas.create_text(width-2.025*margin,1.575*margin,text=Portfolio.year,font='Dubai 8')
        
         # rows in table 
         for i in range(numRows):
@@ -181,14 +199,14 @@ class Graph(object):
         Graph.startDate = startDate
         Graph.endDate = endDate
         self.displayDates = []
+        self.limitDates = []
         self.lastIndex = len(self.dates)-1 
         # need this to GO IN PREDICTED 
         self.solidCloseValues = []
         self.numOrigVal = 0
-        self.rbfVal = []
-        self.linearVal = []
-        self.numPredictedRBFVal= 0
-        self.numPredictedLinearVal = 0 
+        self.val = []
+        #self.numPredictedRBFVal= 0
+        #self.numPredictedLinearVal = 0 
         #
         self.startDate = startDate
         self.endDate = endDate 
@@ -210,11 +228,13 @@ class Graph(object):
             date = str(d)
             #print(date[:10])
             self.displayDates.append((date[:10]))
+        self.limitDates = [self.displayDates[i] for i in range(0,len(self.displayDates),len(self.displayDates)//5)]
         
     
     def addDates(self,predictedDT):
         for prediction in predictedDT:
             self.displayDates.append(prediction)
+        self.limitDates = [self.displayDates[i] for i in range(0,len(self.displayDates),len(self.displayDates)//5)]
             #print (self.displayDates)
     
     def getClosingValues(self):
@@ -232,18 +252,12 @@ class Graph(object):
         #return self.solidCloseValues
         #print(plotClosingVal)
 
-    def predictedRBFValues(self,predicted):
+    def predictedValues(self,predicted):
       #  self.rbfVal.append(self.solidCloseValues[-1])
         for prediction in predicted:
-            self.rbfVal.append(prediction)
-            self.numPredictedRBFVal+=1
-            
-    def predictedLinearValues(self,predicted):
-      #  self.linearVal.append(self.solidCloseValues[-1])
-        for prediction in predicted:
-            self.linearVal.append(prediction)
-            self.numPredictedLinearVal+=1
-            #print ('i went in predict linline')
+            self.val.append(prediction)
+            #self.numPredictedRBFVal+=1
+        
         
 
 class Solid(Graph):
@@ -260,6 +274,7 @@ class Solid(Graph):
         canvas.create_rectangle(margin,margin,self.width-margin,self.height-margin,fill="white")
         startY = self.height-margin
         startingPt = margin/2
+        incrementDate = (self.width-2*margin-startingPt)/len(self.limitDates)
         increment = (self.width-2*margin-startingPt)/len(self.displayDates)
         yBase = startY-startingPt
         # y-axis: values 
@@ -271,9 +286,9 @@ class Solid(Graph):
         #print ('min',min(self.solidCloseValues))
         allVal = []
         allVal.extend(self.solidCloseValues)
-        if len(self.rbfVal)!=0: 
-            allVal.extend(self.rbfVal)
-            allVal.extend(self.linearVal)
+        if len(self.val)!=0: 
+            allVal.extend(self.val)
+            allVal.extend(self.val)
         minimum = int(min(allVal))            
         scale = (int(max(allVal))+1-min(allVal))/10
         
@@ -304,44 +319,26 @@ class Solid(Graph):
             
             
             # stack overflow for angle 
-        for i in range(len(self.displayDates)):
-            xPos = i*increment + margin + startingPt
-            if self.displayDates[i][5]=="0":
-                txt = self.displayDates[i][6:]
+        for i in range(len(self.limitDates)):
+            xPos = i*incrementDate + margin + startingPt
+            if self.limitDates[i][5]=="0":
+                txt = self.limitDates[i][6:]
             else:
-                txt = self.displayDates[i][5:]
+                txt = self.limitDates[i][5:]
             canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90) 
             canvas.create_line(xPos,self.height-margin,xPos,self.height-7*margin/8)
         
         # draw predicted
-        rbfLine = [connectLines[-1]]  
-        for i in range(len(self.rbfVal)):
+        line = [connectLines[-1]]  
+        for i in range(len(self.val)):
             xPos = (self.lastIndex+i)*increment + margin + startingPt
-            yPos = yBase-(yIncrement/scale)* (self.rbfVal[i]-minimum)
-            rbfLine.append((xPos,yPos))
+            yPos = yBase-(yIncrement/scale)* (self.val[i]-minimum)
+            line.append((xPos,yPos))
         
-        linLine = [connectLines[-1]]
-        for i in range(len(self.linearVal)):
-                xPos = (self.lastIndex+i)*increment + margin + startingPt
-                yPos = yBase-(yIncrement/scale)* (self.linearVal[i]-minimum)
-                linLine.append((xPos,yPos))
-        print('linline',linLine)
-        print ('rbfline',rbfLine)
-        if len(linLine)>1: canvas.create_line(linLine,width=3,fill='purple')
-        for point in linLine:
+        if len(line)>1: canvas.create_line(line,width=3,fill='purple')
+        for point in line:
             canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill='pink')
-        
-        if len(rbfLine)>1: canvas.create_line(rbfLine,width=3,fill='peach puff')
-        for point in rbfLine:
-            canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill='pink')
-
-               # point = self.linearVal[i]
-                #if i==0: 
-                 #   color = 'red'
-               # else:
-                #    color = 'pink'
-               # canvas.create_oval(point[0]-radius,point[1]-radius,point[0]+radius,point[1]+radius,fill=color)
-                    
+                
         
         # drawing past lines and points
         canvas.create_line(connectLines,width=3)
@@ -524,6 +521,10 @@ def init(data):
     data.visited = False 
     data.password = False 
     data.username = False 
+    # for portfolio 
+    data.trainMonth = False  
+    data.trainDay = False 
+    data.trainYear = False
 
 def mousePressed(event, data):
     if data.startState:
@@ -560,11 +561,28 @@ def mousePressed(event, data):
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
             data.Choice = True 
             data.portfolio = False 
+        elif data.width-4.55*margin<=event.x<=data.width-3.78*margin and margin*1.35<=event.y<=margin*1.8:
+            data.trainMonth = True 
+            data.trainDay = False 
+            data.trainYear = False 
+            print('here 2')
+            print('state',data.trainMonth)
+        # day 
+        elif data.width-3.65*margin<=event.x<=data.width-2.88*margin and margin*1.35<=event.y<=margin*1.8:
+            data.trainMonth = False  
+            data.trainDay = True  
+            data.trainYear = False
+        # year 
+        elif data.width-2.75*margin<=event.x<=data.width-1.3*margin and margin*1.35<=event.y<=margin*1.8:
+            data.trainMonth = False  
+            data.trainDay = False 
+            data.trainYear = True 
         elif data.width-2.875*margin<=event.x<=data.width-margin and margin/6<=event.y<=margin*5/6:
             saveInfo('documentUsers.txt',Portfolio.items)
         elif data.width-4.75*margin<=event.x<=data.width-2.875*margin and margin/6<=event.y<=margin*5/6:
             Earnings.calculate()
         myPortfolio(data,event.x,event.y)
+        
     elif data.drawCandle or data.drawSolidLine:
         margin = data.width/7
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
@@ -572,10 +590,14 @@ def mousePressed(event, data):
             data.drawSolidLine = False
         elif data.drawSolidLine:
             if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
-                (dates,values) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,2)
+                (dates,values1) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,10)
+                values2 = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,10)
+                values =[]
+                for i in range(len(values1)):
+                    values.append((values1[i]+values2[i])/2)
                 data.line.addDates(dates)
-                data.line.predictedRBFValues(values)
-                values = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,2)
+                data.line.predictedValues(values)
+                
                 
             
 def enterUsername(letter):
@@ -686,11 +708,11 @@ def redrawAll(canvas, data):
             data.errorState = True 
             Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawSolidLine==True:
-        try:
-            data.line.drawSolid(canvas)
-        except:
-            data.errorState = True 
-            Option.draw(canvas,data.width,data.height,data)
+        #try:
+        data.line.drawSolid(canvas)
+       # except:
+       # data.errorState = True 
+       # Option.draw(canvas,data.width,data.height,data)
     
                 
 
@@ -712,10 +734,30 @@ def keyPressed(event, data):
         letter = event.keysym
         controlInput(data,letter)
     elif data.portfolio:
-        letter = event.keysym 
-        (posit,categ)= data.pFPoint
-        #print (posit,categ)
-        enterPortfolio(posit,categ,letter)
+        print('hi')
+        print('stated 2',data.trainMonth)
+        if data.trainMonth:
+            print('here')
+            if event.keysym in string.digits:
+                print('entered',event.keysym)
+                Portfolio.month+=event.keysym
+            elif event.keysym=="BackSpace" and len(Portfolio.month)>0:
+                Portfolio.month=Portfolio.month[:-1]
+        elif data.trainDay:
+            if event.keysym in string.digits:
+                Portfolio.day+=event.keysym
+            elif event.keysym=="BackSpace" and len(Portfolio.day)>0:
+                Portfolio.day=Portfolio.day[:-1]
+        elif data.trainYear:
+            if event.keysym in string.digits:
+                Portfolio.year+=event.keysym
+            elif event.keysym=="BackSpace" and len(Portfolio.year)>0:
+                Portfolio.year=Portfolio.year[:-1]
+        else:
+            letter = event.keysym 
+            (posit,categ)= data.pFPoint
+            #print (posit,categ)
+            enterPortfolio(posit,categ,letter)
 
         
 
@@ -813,15 +855,15 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        try:
-            data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
-            data.line.getDates()
-            data.line.getClosingValues()
-            data.enterStock=False
-            data.errorState = False          
-        except:
+        #try:
+        data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
+        data.line.getDates()
+        data.line.getClosingValues()
+        data.enterStock=False
+        data.errorState = False          
+       # except:
           
-            data.errorState = True 
+        data.errorState = True 
             
 def controlInput(data,letter):
     if data.stockName:
