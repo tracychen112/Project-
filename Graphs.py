@@ -14,6 +14,7 @@ class Cover(object):
     username = ''
     password = ''
     passwordShown = ''
+
     @staticmethod
     def draw(canvas,width,height):
         fractW = width/5
@@ -33,20 +34,29 @@ class Cover(object):
         
 class Choice(object):
     
-    @staticmethod
-    def draw(canvas,width,height):
+    def _init_(self):
+        pass 
+        #self.stockGraph = PhotoImage(file="stockGraph.gif")
+        #self.piggBank = PhotoImage(file="pigBank.gif") 
+    
+    #@staticmethod
+    def draw(self,canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light yellow",width=0)
         canvas.create_text(width/2,height/10,text="Options",font="Dubai 50",fill="black")
-        # View graphs 
+         #View graphs 
         canvas.create_rectangle(width/8,3*height/8,4*width/9,7*height/8,fill="white")
+        
+        
         # View earnings/portfolio 
-        canvas.create_text(103*width/144,2*height/7,text="My Earnings",font="Dubai 35",fill="black")
+        canvas.create_text(103*width/144,2*height/7,text="My Strategy",font="Dubai 35",fill="black")
         canvas.create_rectangle(5*width/9,3*height/8,7*width/8,7*height/8,fill="white")
-        #canvas.create_image(103*width/144,5*height/8,image="piggyBank.jpg")
+        
         # text for graphs 
         canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
         
-
+        
+        #canvas.create_image(41*width/144,5*height/8,image=self.stockGraph)
+        #canvas.create_image(103*width/144,5*height/8,image= self.piggyBank)
      
 class Option(object):
     word = ""
@@ -162,7 +172,14 @@ class Portfolio(object):
         for i in range(numCols):
             if len(title[i])>13:
                 title[i]=title[i][:11] + '\n'+title[i][11:]
-            canvas.create_text(i*columnWidth+columnWidth/2,rowWidth/2+2*margin,text=title[i],font="Calibri 8 bold")
+            if i ==0 or i==1 or i==2 or i==5:
+                color = 'dark green'
+            else:
+                color = 'black'
+            canvas.create_text(i*columnWidth+columnWidth/2,rowWidth/2+2*margin,text=title[i],font="Calibri 8 bold",fill=color)
+            
+            
+           
         
         # graph buttons
         for i in range(1,numRows):
@@ -289,8 +306,9 @@ class Solid(Graph):
         if len(self.val)!=0: 
             allVal.extend(self.val)
             allVal.extend(self.val)
-        minimum = int(min(allVal))            
-        scale = (int(max(allVal))+1-min(allVal))/10
+        minimum = int(min(allVal)) 
+        newMax = (int(max(allVal)-min(allVal))*.2+ max(allVal)+1)        
+        scale = int((newMax-min(allVal)))/10
         
         #print ('scale',scale)
         #scale = int(scale)+1
@@ -379,7 +397,7 @@ class CandleStick(Graph):
         self.startingPt = self.margin/2
         self.yBase = self.startY-self.startingPt
         self.minimum = None 
-        self.yIncrement = (self.height-2*self.margin-self.startingPt)/len(self.dates)
+        self.yIncrement = (self.height-2*self.margin-self.startingPt)/10
         self.increment = (self.width-2*self.margin-self.startingPt)/len(self.dates)
         self.portfolio = False 
         
@@ -396,8 +414,11 @@ class CandleStick(Graph):
             for i in range(len(self.high[val])):
                 highVal.append(self.high[val][i])
         self.maxVal = max(highVal)
-        scale = (self.maxVal-self.minVal)/len(self.dates)
-        self.scale = int(scale)+1
+        newMax = (int(self.maxVal-self.minVal))*.2+ self.maxVal+1
+       # minimum = min(allVal) 
+       # newMax = (int(max(allVal)-min(allVal))*.2+ max(allVal)+1) 
+         #scale = int((newMax-min(allVal)))/10
+        self.scale = int(newMax-self.minVal)/10
         #print(self.maxVal,self.minVal,self.minimum)
         #print('low',lowVal)
         #print('high',highVal)
@@ -435,6 +456,7 @@ class CandleStick(Graph):
                 self.convertClose.append(newVal)
     
     def drawCandleStick(self,canvas):
+        incrementDate = (self.width-2*self.margin-self.startingPt)/len(self.limitDates)
     
         canvas.create_rectangle(0,0,self.width,self.height,fill="light green",width=0)
         canvas.create_rectangle(self.margin,self.margin,self.width-self.margin,self.height-self.margin,fill="white")
@@ -455,14 +477,17 @@ class CandleStick(Graph):
             canvas.create_line(xPos,self.convertHigh[i],xPos,top)
             canvas.create_line(xPos,self.convertLow[i],xPos,bottom)
             canvas.create_rectangle(xPos-5,top,xPos+5,bottom,fill=color)
+            
+            # stack overflow for angle 
+        for i in range(len(self.limitDates)):
+            xPos = i*incrementDate + self.margin + self.startingPt
+            if self.displayDates[i][5]=="0":
+                txt = self.limitDates[i][6:]
+            else:
+                txt = self.limitDates[i][5:]
+            canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90)
             # markers on x-axis 
             canvas.create_line(xPos,self.height-self.margin,xPos,self.height-7*self.margin/8)
-            # stack overflow for angle 
-            if self.displayDates[i][5]=="0":
-                txt = self.displayDates[i][6:]
-            else:
-                txt = self.displayDates[i][5:]
-            canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90)
             
         # draw year 
         if self.displayDates[0][:4]!=self.displayDates[-1][:4]:
@@ -471,11 +496,11 @@ class CandleStick(Graph):
             dateTxt = "Year: " + self.displayDates[0][:4]
         canvas.create_text(1.5*self.margin,self.margin-10,text= dateTxt,font="Dubai 15")
         
-        for i in range(len(self.displayDates)):
+        for i in range(10):
             yPos = self.yBase-i*self.yIncrement
             val = self.minimum + i*self.scale
             canvas.create_line(7*self.margin/8,yPos,self.margin,yPos)
-            canvas.create_text(7*self.margin/8,yPos,text=str(val),anchor= E,font="Calibri 10 bold")
+            canvas.create_text(7*self.margin/8,yPos,text='%0.1f'%val,anchor= E,font="Calibri 10 bold")
             
         # side labels
         canvas.create_text(self.margin/3,self.height/2,text="Price",font="Dubai 20",angle=90)
@@ -525,6 +550,7 @@ def init(data):
     data.trainMonth = False  
     data.trainDay = False 
     data.trainYear = False
+    data.backToPortfolio = False 
 
 def mousePressed(event, data):
     if data.startState:
@@ -561,6 +587,10 @@ def mousePressed(event, data):
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
             data.Choice = True 
             data.portfolio = False 
+        elif data.width-2.875*margin<=event.x<=data.width-margin and margin/6<=event.y<=margin*5/6:
+            saveInfo('documentUsers.txt',Portfolio.items)
+        elif data.width-4.75*margin<=event.x<=data.width-2.875*margin and margin/6<=event.y<=margin*5/6:
+            Portfolio.items, Portfolio.earnings = Earnings.calculate(Portfolio.items,Portfolio.day,Portfolio.month,Portfolio.year)
         elif data.width-4.55*margin<=event.x<=data.width-3.78*margin and margin*1.35<=event.y<=margin*1.8:
             data.trainMonth = True 
             data.trainDay = False 
@@ -577,17 +607,21 @@ def mousePressed(event, data):
             data.trainMonth = False  
             data.trainDay = False 
             data.trainYear = True 
-        elif data.width-2.875*margin<=event.x<=data.width-margin and margin/6<=event.y<=margin*5/6:
-            saveInfo('documentUsers.txt',Portfolio.items)
-        elif data.width-4.75*margin<=event.x<=data.width-2.875*margin and margin/6<=event.y<=margin*5/6:
-            Earnings.calculate()
+        else:
+            data.trainMonth = False  
+            data.trainDay = False 
+            data.trainYear = False  
         myPortfolio(data,event.x,event.y)
         
     elif data.drawCandle or data.drawSolidLine:
         margin = data.width/7
-        if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:
-            data.enterStock = True 
+        if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3 and data.backToPortfolio:
+            data.portfolio = True 
             data.drawSolidLine = False
+            data.backToPortfolio = False 
+        elif margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:   
+            data.enterStock= True 
+            data.drawSolidLine = False 
         elif data.drawSolidLine:
             if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
                 (dates,values1) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,10)
@@ -619,7 +653,7 @@ def enterPassword(letter):
 # writes contents into file                
 def saveInfo(path,contents):
     with open(path, "wt") as f:
-        headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
+        headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ',': ', 'graphs: ']
         format = ''
         for row in contents:
             format+=headers[row]
@@ -631,7 +665,7 @@ def saveInfo(path,contents):
 # reading info and reprinting out 
 def readFile(path):
    # items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
-    headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
+    headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ',': ', 'graphs: ']
     with open(path, "rt") as f:
         contents = f.read()
         index = 0
@@ -653,7 +687,16 @@ def myPortfolio(data,x,y):
         col = (x)/colWidth
         if col<=8.5:
             try:
-                data.candle = CandleStick(Portfolio.items[0][row],data.width,data.height,Graph.startDate,Graph.endDate)
+                day = Portfolio.day
+                month = Portfolio.month
+                year = Portfolio.year
+                #print('date predetermined',Graphs.Portfolio.month,Graphs.Portfolio.day,Graphs.Portfolio.year)
+                if len(day)==1:
+                    day = '0'+day
+                if len(month)==1:
+                    month = '0'+month
+                start = year+'-'+month+'-'+day 
+                data.candle = CandleStick(Portfolio.items[0][row],data.width,data.height,start,'2018-03-27')
                 data.candle.getDates()
                 data.candle.getClosingValues()
                 data.candle.getScale()
@@ -665,19 +708,30 @@ def myPortfolio(data,x,y):
                 data.drawSolidLine = False 
                 data.enterStock = False 
                 data.portfolio = False 
+                data.backToPortfolio = True 
             except:
                 print('failed')
                 pass 
         else:
             try:
+                day = Portfolio.day
+                month = Portfolio.month
+                year = Portfolio.year
+               # print('date predetermined',Graphs.Portfolio.month,Graphs.Portfolio.day,Graphs.Portfolio.year)
+                if len(day)==1:
+                    day = '0'+day
+                if len(month)==1:
+                    month = '0'+month
+                start = year+'-'+month+'-'+day 
                 print('col2',col)
-                data.line = Solid(Portfolio.items[0][row],data.width,data.height,Graph.startDate,Graph.endDate)
+                data.line = Solid(Portfolio.items[0][row],data.width,data.height,start,'2018-03-27')
                 data.line.getDates()
                 data.line.getClosingValues()
                 data.drawSolidLine = True 
                 data.drawCandle = False 
                 data.enterStock = False 
                 data.portfolio = False
+                data.backToPortfolio = True 
             except:
                 print('failed')
                 pass 
@@ -692,21 +746,22 @@ def redrawAll(canvas, data):
     if data.startState:
         Cover.draw(canvas,data.width,data.height)
     elif data.Choice:
-        Choice.draw(canvas,data.width,data.height)
+        data.choice = Choice()
+        data.choice.draw(canvas,data.width,data.height)
     elif data.enterStock:
         Option.draw(canvas,data.width,data.height,data)
     elif data.portfolio:
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
-        try:
-            
-            data.candle.drawCandleStick(canvas)
-            print('drew')
-            data.errorState = False 
-        except:
-            data.errorState = True 
-            Option.draw(canvas,data.width,data.height,data)
+        #try:
+        data.candle.drawCandleStick(canvas)
+        
+        print('drew')
+        #data.errorState = False 
+      #  except:
+        #data.errorState = True 
+       # Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawSolidLine==True:
         #try:
         data.line.drawSolid(canvas)
@@ -828,19 +883,20 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        try:
-            data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
-            data.candle.getDates()
-            data.candle.getClosingValues()
-            data.candle.getScale()
-            data.candle.getLowValues()
-            data.candle.getHighValues()
-            data.candle.getOpenValues()
-            data.candle.getCloseValues()
-            data.enterStock=False
-            data.errorState = False 
-        except:
-            data.errorState = True
+        #try:
+        data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
+        data.candle.getDates()
+        print('dates',data.candle.displayDates)
+        data.candle.getClosingValues()
+        data.candle.getScale()
+        data.candle.getLowValues()
+        data.candle.getHighValues()
+        data.candle.getOpenValues()
+        data.candle.getCloseValues()
+        data.enterStock=False
+        data.errorState = False 
+        #except:
+        data.errorState = True
              
     if (6.5*data.width/10)<=x<=(8.5*data.width/10) and (14*data.height/20)<=y<=(data.height*17/20):
         data.drawSolidLine=True 
