@@ -1,17 +1,44 @@
-import datetime
 import RegressionModel
 import RBF 
+import quandl 
+quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 
-now = datetime.datetime.now()
-
-items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
 
 # money left to invest, earnings/losses, total account--unsure of this one?
-def calculate(items):
+def calculate(items,day,month,year):
     newLst = reorganizeLst(items)
+    print('here',newLst)
+   # print ('hi',newLst)
+    overallEarn = 0
+    print('list',newLst)
+    index =0 
+    count=0
     for lst in newLst:
-        if lst[1]=='BUY':
-            earnings = buy(lst)
+        #print (lst)
+        #print('result',move(lst))
+        if lst[0]!="" and lst[2]!="":
+            recentPrice = quandl.get('WIKI/'+lst[0],rows=1,column_index=4)
+            for d in recentPrice:
+                recentPrice = list(recentPrice[d]) 
+            items[3][index] = '%0.2f' % recentPrice[0] 
+            items[4][index] = '%0.2f' % (recentPrice[0]*int(items[2][index]))  
+        
+        earnings,futPrice = move(lst,day,month,year)
+        if earnings!=None and futPrice!=None:
+            items[6][index]= "%0.2f" % futPrice
+            items[7][index]= "%0.2f" % earnings
+            overallEarn+=earnings 
+        else:
+            count+=1
+        index+=1
+    if count==10:
+        earnings = ''
+    elif overallEarn==0:
+        earnings='0'
+    else:
+        earnings = '%0.2d' % (overallEarn)
+    return (items,earnings)
+    
     
     
     
@@ -31,28 +58,46 @@ def calculate(items):
 '''
             
 
-def buy(lst):
+def move(lst,day,month,year):
+    #print('date predetermined',Graphs.Portfolio.month,Graphs.Portfolio.day,Graphs.Portfolio.year)
+    if len(day)==1:
+        day = '0'+day
+    if len(month)==1:
+        month = '0'+month
+    start = year+'-'+month+'-'+day 
     try:
-        data = quandl.get('WIKI/'+lst[0],start_date=date[0],end_date=date[1],column_index=4)
-        dates = quandl.get('WIKI/'+lst[0],start_date=date[0],end_date=date[1],column_index=0)
+        #print('comp',lst[0])
+        data = quandl.get('WIKI/'+lst[0],start_date=start,end_date='2018-03-27',column_index=4)
+        dates = quandl.get('WIKI/'+lst[0],start_date=start,end_date='2018-03-27')
+        #print(data)
+        #print ('company',lst[0])
+        #print ('start',date[0])
+        #print('end', date[1])
+        #print ('date: ',dates)
+        #dates2 = RegressionModel.getDates(dates)
         datelst = RegressionModel.getDates(dates)
         valLst = RegressionModel.getClosingValues(data)
-        rbfval = RBF.mainPredict(datelst,valLst,predDays)
+        predDays = 10
+        rbf = RBF.mainPredict(datelst,valLst,predDays)
+        #print('here',rbfVal)
         linVal = RegressionModel.linearReg(datelst,valLst,predDays)
-        price = (rbVal[1][-1]+linVal[-1])/2
+        price = (rbf[1][-1]+linVal[-1])/2
         
+        lastVal = quandl.get('WIKI/'+lst[0],rows=1)
         # calculate buy here 
         currPrice = valLst[-1]
-        change =currPrice-price 
-        shares = lst[2]
+        change =(currPrice-price) 
+        shares = int(lst[2])
         result = shares*change
-        return result
+        if lst[1]=='SHORT':
+            result=-result
+        return (result,price)
     except:
-        pass 
+        return (None,None)
 
-def dateRange(date):
-    now = datetime.datetime.now()
-    currDate = str(now)
+"""
+def dateRange():
+    now = Graph.endDate 
     day = int(now.day)
     year = int(now.year)
     month = int(now.month)
@@ -74,7 +119,7 @@ def dateRange(date):
         pastDay = str(pastDay)
     startDate = str(year) + '-' +  month + '-' + pastDay
     return (startDate,currDate)
-
+"""
     
 
 def reorganizeLst(items):
@@ -84,6 +129,7 @@ def reorganizeLst(items):
         for index in range(6):
             templst.append(items[index][i])
         itemlst.append(templst)
+    #print(itemlst)
     return itemlst
         
 #print(calculate)
