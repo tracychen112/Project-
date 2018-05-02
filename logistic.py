@@ -11,7 +11,7 @@ n_epoch = 300
 
 def getData(name):
     lst = []
-    data = quandl.get('WIKI/'+name,start_date='2000-01-01',end_date='2018-02-01',column_index=4)
+    data = quandl.get('WIKI/'+name,start_date='2017-01-01',end_date='2018-03-01',column_index=4)
     for d in data:
         for i in range(len(data[d])):
             lst.append(data[d][i])
@@ -53,16 +53,17 @@ def coefficients_sgd(train, l_rate, n_epoch):
     
 def getTest(name):
     dataSet = []
-    data = quandl.get('WIKI/'+name,start_date='2018-02-02',end_date='2018-03-27',column_index=4)
+    data = quandl.get('WIKI/'+name,start_date='2018-03-20',end_date='2018-03-27',column_index=4)
     tempData = []
     
     for d in data:
         for i in range(len(data[d])):
             tempData.append(data[d][i])
-            
+
     for i in range(1,len(tempData)-2):
         dataSet.append([tempData[i+2],tempData[i+1],tempData[i]])
     return dataSet
+
 
 def logistic_regression(name,l_rate=0.0001, n_epoch=300):
     predictions = list()
@@ -77,21 +78,3 @@ def logistic_regression(name,l_rate=0.0001, n_epoch=300):
 
 
     
-# Calculate coefficients
-"""
-dataset = [[2.7810836,2.550537003,0],
-    [1.465489372,2.362125076,0],
-    [3.396561688,4.400293529,0],
-    [1.38807019,1.850220317,0],
-    [3.06407232,3.005305973,0],
-    [7.627531214,2.759262235,1],
-    [5.332441248,2.088626775,1],
-    [6.922596716,1.77106367,1],
-    [8.675418651,-0.242068655,1],
-    [7.673756466,3.508563011,1]]
-"""
-#dataset = 
-#coef = coefficients_sgd(dataset, l_rate, n_epoch)
-#print(coef)
-#predict = logistic_regression('TSLA',l_rate,n_epoch)
-#print(predict)
