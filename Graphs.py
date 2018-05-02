@@ -41,7 +41,6 @@ class Choice(object):
     #@staticmethod
     def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light yellow",width=0)
-        #canvas.create_text(width/2,height/10,text="Options",font="Dubai 50",fill="black")
          #View graphs 
         canvas.create_rectangle(width/8,3*height/8,4*width/9,7*height/8,fill="white")
         # text for graphs 
@@ -71,21 +70,21 @@ class Recommend(object):
     
     @staticmethod
     def draw(canvas,width,height):
-        canvas.create_rectangle(0,0,width,height,fill='sandy brown')
+        canvas.create_rectangle(0,0,width,height,fill='Navajo white')
         canvas.create_text(width/4+40,height/4-10,text='Stock name : ',font='Dubai 20')
         canvas.create_rectangle(width/2,height/5,width*3/4,height/3-20,fill='white')
         canvas.create_text((width/2+width*3/4)/2,(height/5+height/3-20)/2,text=Recommend.name,font='Dubai 15 bold')
         
         # recommend button
-        canvas.create_rectangle(width/2-100,height/2-70,width/2+100,height/2+50,fill='orange')
+        canvas.create_rectangle(width/2-100,height/2-70,width/2+100,height/2+50,fill='sandy brown')
         canvas.create_text(width/2,height/2-10,text='Recommend',font='Dubai 20')
         
         # results
-        canvas.create_text(width/4,height*2/3+20,text='You should : ',font='Dubai 20')
-        canvas.create_text(width/4,height*5/6,text='Why? : ',font='Dubai 20')
+        canvas.create_text(width/3,height*2/3+20,text='You should : ',font='Dubai 20')
+        canvas.create_text(width/3,height*5/6,text='Why? : ',font='Dubai 20')
         
-        canvas.create_text(width/4+120,height*2/3+20,text=Recommend.move,font='Dubai 20')
-        canvas.create_text(width/4+140,height*5/6,text=Recommend.reason,font='Dubai 20')
+        canvas.create_text(width/3+140,height*2/3+20,text=Recommend.move,font='Dubai 20')
+        canvas.create_text(width/3+140,height*5/6,text=Recommend.reason,font='Dubai 20')
         
         # back button 
         margin = width/7
@@ -132,7 +131,6 @@ class Option(object):
         canvas.create_text(width*13.75/20,height*12/20,text=Option.endDay,font = "Dubai 10",fill="black")
         canvas.create_text(width*16.5/20,height*12/20,text=Option.endYear,font = "Dubai 10",fill="black")
         
-        # write visualize or go?
         canvas.create_rectangle(width*1.5/10,14*height/20,3.5*width/10,height*17/20,fill="light yellow")
         canvas.create_rectangle(6.5*width/10,14*height/20,8.5*width/10,height*17/20,fill="light pink")
         canvas.create_text(width*2.5/10,height*15.5/20,text="Candlestick",font="Dubai 20",fill="black")
@@ -232,7 +230,7 @@ class Portfolio(object):
 
         # Recommendations 
         
-        canvas.create_rectangle(width-7*margin,margin/6,width-5*margin,margin*1.8,fill='orange')
+        canvas.create_rectangle(width-7*margin,margin/6,width-5*margin,margin*1.8,fill='sandy brown')
         canvas.create_text(width-6*margin,(margin/6 + margin*1.8)/2,text='Recommend',font='Calibri 10 bold')
         
 
@@ -555,7 +553,6 @@ def init(data):
     data.newUser = False 
     data.predicted = False 
     data.recommend = False 
-    data.enterRecommend = False 
 
 def mousePressed(event, data):
     if data.startState:
@@ -598,57 +595,34 @@ def mousePressed(event, data):
             saveInfo(data.user,Portfolio.items)
         elif data.width-7*margin<=event.x<=data.width-5*margin and margin/6<=event.y<=margin*1.8:
             data.recommend = True 
-            data.backToPortfolio = True 
             data.portfolio=False 
         elif data.width-4.75*margin<=event.x<=data.width-2.875*margin and margin/6<=event.y<=margin*5/6:
             Portfolio.items, Portfolio.earnings = Earnings.calculate(Portfolio.items,Portfolio.day,Portfolio.month,Portfolio.year)
+            data.recommend = False 
         elif data.width-4.55*margin<=event.x<=data.width-3.78*margin and margin*1.35<=event.y<=margin*1.8:
             data.trainMonth = True 
             data.trainDay = False 
             data.trainYear = False 
+            data.recommend = False 
         # day 
         elif data.width-3.65*margin<=event.x<=data.width-2.88*margin and margin*1.35<=event.y<=margin*1.8:
             data.trainMonth = False  
             data.trainDay = True  
             data.trainYear = False
+            data.recommend = False 
         # year 
         elif data.width-2.75*margin<=event.x<=data.width-1.3*margin and margin*1.35<=event.y<=margin*1.8:
             data.trainMonth = False  
             data.trainDay = False 
             data.trainYear = True 
+            data.recommend = False 
         else:
             data.trainMonth = False  
             data.trainDay = False 
-            data.trainYear = False  
+            data.trainYear = False 
+            data.recommend = False  
         myPortfolio(data,event.x,event.y)
-    elif data.recommend:
-        margin = data.width/7
-        if data.width/2<=event.x<=data.width*3/4 and data.height/5<=event.y<=data.height/3-20:
-            data.enterRecommend = True 
-        elif data.width/2-100<=event.x<=data.width/2+100 and data.height/2-70<=event.y<=data.height/2+50:
-            #try:
-            prediction = logistic.logistic_regression(Recommend.name)
-            print('success')
-            result = prediction[-1]
-            print('result',result)
-            if result==0:
-                Recommend.reason = 'Price going down'
-                Recommend.move = 'Sell or Short'
-            elif result==1:
-                Recommend.reason = 'Price going up'
-                Recommend.move = 'Buy'
-            #except:
-             #   print('failed somehow')
-              #  pass 
-              
-        elif margin/3<=event.x<=margin and margin/3<=event.y<= margin*2/3:
-            print('entered!')
-            data.portfolio = True  
-            data.enterRecommend = False
-            data.enterRecommend = False 
-        else:
-            data.enterRecommend = False
-            data.enterRecommend = False 
+    
     elif data.drawCandle or data.drawSolidLine:
         margin = data.width/7
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3 and data.backToPortfolio:
@@ -670,6 +644,31 @@ def mousePressed(event, data):
                 data.line.addDates(dates)
                 data.line.predictedValues(values)
                 data.predicted = True 
+                
+    elif data.recommend:
+        margin = data.width/7
+        if data.width/2<=event.x<=data.width*3/4 and data.height/5<=event.y<=data.height/3-20:
+            data.enterRecommend = True 
+        elif data.width/2-100<=event.x<=data.width/2+100 and data.height/2-70<=event.y<=data.height/2+50:
+            try:
+                prediction = logistic.logistic_regression(Recommend.name)
+                result = prediction[-1]
+                if result==0:
+                    Recommend.reason = 'Price going down'
+                    Recommend.move = 'Sell or Short'
+                elif result==1:
+                    Recommend.reason = 'Price going up'
+                    Recommend.move = 'Buy'
+            except:
+                pass 
+              
+        elif margin/3<=event.x<=margin and margin/3<=event.y<= margin*2/3:
+            data.portfolio = True  
+            data.enterRecommend = False
+            data.enterRecommend = False 
+        else:
+            data.enterRecommend = False
+            data.enterRecommend = False 
                 
                 
             
@@ -711,7 +710,6 @@ def saveInfo(path,contents):
 # from 112 website 
 # reading info and reprinting out 
 def readFile(path):
-   # items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
     headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
     with open(path, "rt") as f:
         contents = f.read()
@@ -805,8 +803,6 @@ def redrawAll(canvas, data):
     elif data.portfolio:
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
-    elif data.recommend:
-        Recommend.draw(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
         try:
             data.candle.drawCandleStick(canvas)
@@ -821,7 +817,8 @@ def redrawAll(canvas, data):
         except:
             data.errorState = True 
             Option.draw(canvas,data.width,data.height,data)
-    
+    elif data.recommend:
+        Recommend.draw(canvas,data.width,data.height)
                 
 
 
@@ -851,9 +848,7 @@ def keyPressed(event, data):
         controlInput(data,letter)
     elif data.recommend==True and data.enterRecommend ==True:
         letter = event.keysym 
-        print('enter rec 2')
         if letter in string.ascii_letters:
-            print('enter rec 3')
             Recommend.name += letter.upper()
         elif len(Recommend.name)>0 and letter=="BackSpace":
             Recommend.name = Recommend.name[:-1]
