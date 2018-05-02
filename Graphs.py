@@ -1,10 +1,11 @@
 from tkinter import * 
-import hashlib 
 import RBF   
 import string 
 import quandl 
 import RegressionModel
 import Earnings 
+import passwordHash 
+import logistic 
 quandl.ApiConfig.api_key = 'CQUhXPCW3sqs92KDd1rD'
 #curl "https://www.quandl.com/api/v3/datatables/ETFG/FUND.json?ticker=SPY,IWM&api_key=CQUhXPCW3sqs92KDd1rD"
 #data <- Quandl.datatable('MER/F1', compnumber="39102")
@@ -25,39 +26,73 @@ class Cover(object):
         canvas.create_text(width/2,height/3,text="iStockUp",font="Dubai 50",fill="black")
         canvas.create_text(width/2,height/2-fractL,text="Username ",anchor=NE,font="Dubai 20",fill="black")
         canvas.create_text(width/2,height/2+fractL,text="Password ",anchor=NE,font= 'Dubai 20',fill="black")
-        canvas.create_text(width/2,height*3/4,text="'Press enter to login'",font='Dubai 20',fill='black')
+        canvas.create_rectangle(width/3,height*3/4-40,width*2/3,height*3/4,fill='purple')
+        canvas.create_text(width/2,height*3/4-20,text='new user?',font='Dubai 20',fill='white')
+        canvas.create_text(width/2,height*5/6,text="'Press enter to login'",font='Dubai 20',fill='black')
         
         # appearance of username and password 
         canvas.create_text((width+fractW)/2,(height-fractL)/2,text=Cover.username,font='Dubai 20',fill='black')
         canvas.create_text((width+fractW)/2,(height+3*fractL)/2,text=Cover.passwordShown,font='Dubai 20',fill='black')
-        # Dubai
         
+        
+
 class Choice(object):
     
-    def _init_(self):
-        pass 
-        #self.stockGraph = PhotoImage(file="stockGraph.gif")
-        #self.piggBank = PhotoImage(file="pigBank.gif") 
-    
     #@staticmethod
-    def draw(self,canvas,width,height):
+    def draw(canvas,width,height):
         canvas.create_rectangle(0,0,width,height,fill="light yellow",width=0)
-        canvas.create_text(width/2,height/10,text="Options",font="Dubai 50",fill="black")
+        #canvas.create_text(width/2,height/10,text="Options",font="Dubai 50",fill="black")
          #View graphs 
         canvas.create_rectangle(width/8,3*height/8,4*width/9,7*height/8,fill="white")
+        # text for graphs 
+        canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
+        # create image on left 
+        canvas.create_line(150,420,170,350,fill='red',width=10)
+        canvas.create_line(170,355,220,365,fill='red',width=10)
+        canvas.create_line(220,370,240,310,fill='red',width=10)
+        canvas.create_polygon(220,305,260,320,250,290,fill='red')
         
         
         # View earnings/portfolio 
-        canvas.create_text(103*width/144,2*height/7,text="My Strategy",font="Dubai 35",fill="black")
+        canvas.create_text(103*width/144,2*height/7,text="Strategy",font="Dubai 35",fill="black")
+        
         canvas.create_rectangle(5*width/9,3*height/8,7*width/8,7*height/8,fill="white")
         
-        # text for graphs 
-        canvas.create_text(41*width/144,2*height/7,text="Graphs",font="Dubai 35",fill="black")
+        #image on right 
+        canvas.create_rectangle((5*width/9+7*width/8)/2-60, (3*height/8 +7*height/8)/2-40  , (5*width/9+7*width/8)/2+60,  (3*height/8 +7*height/8)/2+40,fill='dark green',width=2)
+        canvas.create_text((5*width/9+7*width/8)/2,(3*height/8 +7*height/8)/2,text='$',font='Dubai 40')
+        canvas.create_oval((5*width/9+7*width/8)/2-20,(3*height/8 +7*height/8)/2-30,(5*width/9+7*width/8)/2+20,(3*height/8 +7*height/8)/2+30,width=2)
         
+
+class Recommend(object):
+    move = ''
+    reason = ''
+    name = ''
+    
+    @staticmethod
+    def draw(canvas,width,height):
+        canvas.create_rectangle(0,0,width,height,fill='sandy brown')
+        canvas.create_text(width/4+40,height/4-10,text='Stock name : ',font='Dubai 20')
+        canvas.create_rectangle(width/2,height/5,width*3/4,height/3-20,fill='white')
+        canvas.create_text((width/2+width*3/4)/2,(height/5+height/3-20)/2,text=Recommend.name,font='Dubai 15 bold')
         
-        #canvas.create_image(41*width/144,5*height/8,image=self.stockGraph)
-        #canvas.create_image(103*width/144,5*height/8,image= self.piggyBank)
-     
+        # recommend button
+        canvas.create_rectangle(width/2-100,height/2-70,width/2+100,height/2+50,fill='orange')
+        canvas.create_text(width/2,height/2-10,text='Recommend',font='Dubai 20')
+        
+        # results
+        canvas.create_text(width/4,height*2/3+20,text='You should : ',font='Dubai 20')
+        canvas.create_text(width/4,height*5/6,text='Why? : ',font='Dubai 20')
+        
+        canvas.create_text(width/4+120,height*2/3+20,text=Recommend.move,font='Dubai 20')
+        canvas.create_text(width/4+140,height*5/6,text=Recommend.reason,font='Dubai 20')
+        
+        # back button 
+        margin = width/7
+        canvas.create_rectangle(margin/3,margin/3,margin,margin*2/3,outline ='black',width=2)
+        canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
+        canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
+        
 class Option(object):
     word = ""
     startMonth = "month"
@@ -109,13 +144,12 @@ class Option(object):
         canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
         canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
         
-       # print ( 'error state', data.errorState)
+    
         if data.errorState:
             canvas.create_text(width/2,8*height/9,text='Please Enter Valid Data',font= 'Dubai 20',fill='red')
-         #   print ('here')
 
 class Portfolio(object):
-    # to add in keypressed
+    
     # stocks: 0, moves: 1, numShares:2, endDate:3, endPrices:4, earnings:5
     items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10,6:[""]*10,7:[""]*10}
     day = ''
@@ -135,6 +169,7 @@ class Portfolio(object):
             for i in range(len(Portfolio.items[categ])):
                 canvas.create_text(startY+categ*(colWidth),2*margin+startX+rowWidth+i*(rowWidth),text = Portfolio.items[categ][i],font='Dubai 10')
         canvas.create_text(10,2*margin,text='Earnings: '+Portfolio.earnings,anchor=SW,font='Dubai 15')
+        
     @staticmethod
     def drawEntry(canvas,width,height):
         # background
@@ -146,8 +181,7 @@ class Portfolio(object):
         columnWidth =  (width)/numCols
         canvas.create_rectangle(0,0,width,height,fill="white")
        
-       #width-4.75*margin,margin/6,width-2.875*margin,margin*5/6
-       #width-2.875*margin,margin/6,width-margin,margin*5/6
+      
         # start date to set range for training 
         canvas.create_text(width-2.875*margin,margin*1.2,text="Training (starting) date",font='Dubai 9')
         # month
@@ -177,9 +211,6 @@ class Portfolio(object):
             else:
                 color = 'black'
             canvas.create_text(i*columnWidth+columnWidth/2,rowWidth/2+2*margin,text=title[i],font="Calibri 8 bold",fill=color)
-            
-            
-           
         
         # graph buttons
         for i in range(1,numRows):
@@ -199,7 +230,11 @@ class Portfolio(object):
         canvas.create_rectangle(margin/2,margin*1.25/3,margin,margin*1.75/3,fill='green',outline='black',width=2)
         canvas.create_polygon(margin/2,margin/3,margin/3,margin/2,margin/2,margin*2/3,fill='green',outline='black',width=2)
 
-
+        # Recommendations 
+        
+        canvas.create_rectangle(width-7*margin,margin/6,width-5*margin,margin*1.8,fill='orange')
+        canvas.create_text(width-6*margin,(margin/6 + margin*1.8)/2,text='Recommend',font='Calibri 10 bold')
+        
 
 class Graph(object):
     startDate = ''
@@ -209,7 +244,7 @@ class Graph(object):
         self.company = company 
         self.width = width
         self.height = height 
-        # THIS to go to predicted 
+        
         self.dates = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate)
         self.close = quandl.get('WIKI/'+company,start_date=startDate,end_date=endDate,column_index=4)
         # for earnings 
@@ -218,32 +253,20 @@ class Graph(object):
         self.displayDates = []
         self.limitDates = []
         self.lastIndex = len(self.dates)-1 
-        # need this to GO IN PREDICTED 
+
         self.solidCloseValues = []
         self.numOrigVal = 0
         self.val = []
-        #self.numPredictedRBFVal= 0
-        #self.numPredictedLinearVal = 0 
-        #
+
         self.startDate = startDate
         self.endDate = endDate 
         
     
     # rows and number more to be predicted 
     def getDates(self):
-        # Dates 
-        
-        #print (dates)
-        #print (dates)
-        #print( type(dates.index)) # type panda 
-        #print(len(dates.index))
-        # stack overflow for syntax tolist 
-        #print(dates.index.tolist())
-        #print(self.displayDates)
-        #print (len(dates.index.tolist()))
+
         for d in list(self.dates.index):
             date = str(d)
-            #print(date[:10])
             self.displayDates.append((date[:10]))
         self.limitDates = [self.displayDates[i] for i in range(0,len(self.displayDates),len(self.displayDates)//5)]
         
@@ -252,36 +275,27 @@ class Graph(object):
         for prediction in predictedDT:
             self.displayDates.append(prediction)
         self.limitDates = [self.displayDates[i] for i in range(0,len(self.displayDates),len(self.displayDates)//5)]
-            #print (self.displayDates)
+            
     
     def getClosingValues(self):
-        # Graphing closing values:
-        # closing values 
-        # Get numbers of a specific column 
-        # CHECK CLOSING VALUES 
-        # print(closingVal)
-        #print (self.close)
+        
         for val in self.close:
             for i in range(len(self.close[val])):
                 self.solidCloseValues.append(self.close[val][i])
                 self.numOrigVal+=1
-        #####print (self.solidCloseValues)
-        #return self.solidCloseValues
-        #print(plotClosingVal)
+        
 
     def predictedValues(self,predicted):
-      #  self.rbfVal.append(self.solidCloseValues[-1])
         for prediction in predicted:
             self.val.append(prediction)
-            #self.numPredictedRBFVal+=1
+           
         
         
 
 class Solid(Graph):
     
     def drawSolid(self,canvas):
-        #print(closingValues)
-        #print (closingValues)
+        
         connectLines = []
         newLines = []
         radius = 3
@@ -294,13 +308,9 @@ class Solid(Graph):
         incrementDate = (self.width-2*margin-startingPt)/len(self.limitDates)
         increment = (self.width-2*margin-startingPt)/len(self.displayDates)
         yBase = startY-startingPt
-        # y-axis: values 
-        #print(max(closingValues))
-        #print(min(closingValues))
+        
         yIncrement = (self.height-2*margin-startingPt)/10
-        #print (yIncrement)
-        #print ('max',max(self.solidCloseValues))
-        #print ('min',min(self.solidCloseValues))
+     
         allVal = []
         allVal.extend(self.solidCloseValues)
         if len(self.val)!=0: 
@@ -310,26 +320,21 @@ class Solid(Graph):
         newMax = (int(max(allVal)-min(allVal))*.2+ max(allVal)+1)        
         scale = int((newMax-min(allVal)))/10
         
-        #print ('scale',scale)
-        #scale = int(scale)+1
-        #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
+    
         for i in range(10):
             yPos = yBase-i*yIncrement
             val = minimum + i*scale
             canvas.create_line(7*margin/8,yPos,margin,yPos)
             canvas.create_text(7*margin/8,yPos,text='%0.1f'%val,anchor= E,font="Calibri 10 bold")
         
-        # draw dates
-        #print(self.displayDates)
+        
         if self.displayDates[0][:4]!=self.displayDates[-1][:4]:
             dateTxt = "Years: " + self.displayDates[0][:4] + "-" + self.displayDates[-1][:4]
         else: 
             dateTxt = "Year: " + self.displayDates[0][:4]
-        canvas.create_text(1.5*margin,margin-10,text= dateTxt,font="Dubai 15")
+        canvas.create_text(margin,margin,text= dateTxt,anchor=SW,font="Dubai 15")
         
-        # x-axis: dates and addpoints 
-       # print('num predict',self.numPredictedVal)
-       # print('dates',self.solidCloseValues)
+       
         for i in range(len(self.solidCloseValues)):
             xPos = i*increment + margin + startingPt
             yPos = yBase-(yIncrement/scale)* (self.solidCloseValues[i]-minimum)
@@ -415,26 +420,17 @@ class CandleStick(Graph):
                 highVal.append(self.high[val][i])
         self.maxVal = max(highVal)
         newMax = (int(self.maxVal-self.minVal))*.2+ self.maxVal+1
-       # minimum = min(allVal) 
-       # newMax = (int(max(allVal)-min(allVal))*.2+ max(allVal)+1) 
-         #scale = int((newMax-min(allVal)))/10
+      
         self.scale = int(newMax-self.minVal)/10
-        #print(self.maxVal,self.minVal,self.minimum)
-        #print('low',lowVal)
-        #print('high',highVal)
-        #print('scale',self.scale)
+        
         
     def getLowValues(self):
         for val in self.low:
             for i in range(len(self.low[val])):
-                #adjustPoints = yIncrement/scale * (closingValues[i]-minimum)
                 value = self.low[val][i]
                 newVal = self.yBase-(self.yIncrement/self.scale)*(value-self.minimum)
-                #print (value,newVal)
                 self.convertLow.append(newVal)
-       # print (len(self.low))
-        #print('converted low',self.convertLow)
-        #print ('low',self.low)
+      
         
     def getHighValues(self):
         for val in self.high:
@@ -461,11 +457,13 @@ class CandleStick(Graph):
         canvas.create_rectangle(0,0,self.width,self.height,fill="light green",width=0)
         canvas.create_rectangle(self.margin,self.margin,self.width-self.margin,self.height-self.margin,fill="white")
         
+        width = (len(self.displayDates)-1)*self.increment-(self.margin + self.startingPt)
+        width = (width-(len(self.displayDates)-1))*1.2/(len(self.displayDates)*2)
+        if width>=7:
+            width = 7
         
         for i in range(len(self.displayDates)):
             xPos = i*self.increment + self.margin + self.startingPt
-            # high and low plot
-            # values are FLIPPED-higher-means low, lower means high 
             if self.convertClose[i]>self.convertOpen[i]:
                 bottom = self.convertClose[i]
                 top = self.convertOpen[i]
@@ -476,9 +474,10 @@ class CandleStick(Graph):
                 color = 'white'
             canvas.create_line(xPos,self.convertHigh[i],xPos,top)
             canvas.create_line(xPos,self.convertLow[i],xPos,bottom)
-            canvas.create_rectangle(xPos-5,top,xPos+5,bottom,fill=color)
             
-            # stack overflow for angle 
+            canvas.create_rectangle(xPos-width,top,xPos+width,bottom,fill=color)
+            
+            
         for i in range(len(self.limitDates)):
             xPos = i*incrementDate + self.margin + self.startingPt
             if self.displayDates[i][5]=="0":
@@ -486,15 +485,16 @@ class CandleStick(Graph):
             else:
                 txt = self.limitDates[i][5:]
             canvas.create_text(xPos,self.height-70,text=txt,font="Calibri 8 bold",angle=90)
-            # markers on x-axis 
+    
             canvas.create_line(xPos,self.height-self.margin,xPos,self.height-7*self.margin/8)
+        
             
         # draw year 
         if self.displayDates[0][:4]!=self.displayDates[-1][:4]:
             dateTxt = "Years: " + self.displayDates[0][:4] + "-" + self.displayDates[-1][:4]
         else: 
             dateTxt = "Year: " + self.displayDates[0][:4]
-        canvas.create_text(1.5*self.margin,self.margin-10,text= dateTxt,font="Dubai 15")
+        canvas.create_text(self.margin,self.margin,text= dateTxt,anchor=SW,font="Dubai 15")
         
         for i in range(10):
             yPos = self.yBase-i*self.yIncrement
@@ -551,6 +551,11 @@ def init(data):
     data.trainDay = False 
     data.trainYear = False
     data.backToPortfolio = False 
+    data.user = ''
+    data.newUser = False 
+    data.predicted = False 
+    data.recommend = False 
+    data.enterRecommend = False 
 
 def mousePressed(event, data):
     if data.startState:
@@ -565,6 +570,8 @@ def mousePressed(event, data):
         else:
             data.password= False
             data.username = False 
+        if data.width/3<=event.x<= data.width*2/3 and data.height*3/4-40<=event.y<=data.height*3/4:
+            data.newUser = True 
     if data.Choice:
         if data.width/8<=event.x<=4*data.width/9 and 3*data.height/8<=event.y<=7*data.height/8:
             data.enterStock=True 
@@ -574,7 +581,7 @@ def mousePressed(event, data):
             data.enterStock=False
             data.Choice = False 
             if not data.visited: 
-                readFile('documentUsers.txt')
+                readFile(data.user)
                 data.visited = True 
     elif data.enterStock:
         margin = data.width/7
@@ -588,15 +595,17 @@ def mousePressed(event, data):
             data.Choice = True 
             data.portfolio = False 
         elif data.width-2.875*margin<=event.x<=data.width-margin and margin/6<=event.y<=margin*5/6:
-            saveInfo('documentUsers.txt',Portfolio.items)
+            saveInfo(data.user,Portfolio.items)
+        elif data.width-7*margin<=event.x<=data.width-5*margin and margin/6<=event.y<=margin*1.8:
+            data.recommend = True 
+            data.backToPortfolio = True 
+            data.portfolio=False 
         elif data.width-4.75*margin<=event.x<=data.width-2.875*margin and margin/6<=event.y<=margin*5/6:
             Portfolio.items, Portfolio.earnings = Earnings.calculate(Portfolio.items,Portfolio.day,Portfolio.month,Portfolio.year)
         elif data.width-4.55*margin<=event.x<=data.width-3.78*margin and margin*1.35<=event.y<=margin*1.8:
             data.trainMonth = True 
             data.trainDay = False 
             data.trainYear = False 
-            print('here 2')
-            print('state',data.trainMonth)
         # day 
         elif data.width-3.65*margin<=event.x<=data.width-2.88*margin and margin*1.35<=event.y<=margin*1.8:
             data.trainMonth = False  
@@ -612,18 +621,47 @@ def mousePressed(event, data):
             data.trainDay = False 
             data.trainYear = False  
         myPortfolio(data,event.x,event.y)
-        
+    elif data.recommend:
+        margin = data.width/7
+        if data.width/2<=event.x<=data.width*3/4 and data.height/5<=event.y<=data.height/3-20:
+            data.enterRecommend = True 
+        elif data.width/2-100<=event.x<=data.width/2+100 and data.height/2-70<=event.y<=data.height/2+50:
+            #try:
+            prediction = logistic.logistic_regression(Recommend.name)
+            print('success')
+            result = prediction[-1]
+            print('result',result)
+            if result==0:
+                Recommend.reason = 'Price going down'
+                Recommend.move = 'Sell or Short'
+            elif result==1:
+                Recommend.reason = 'Price going up'
+                Recommend.move = 'Buy'
+            #except:
+             #   print('failed somehow')
+              #  pass 
+              
+        elif margin/3<=event.x<=margin and margin/3<=event.y<= margin*2/3:
+            print('entered!')
+            data.portfolio = True  
+            data.enterRecommend = False
+            data.enterRecommend = False 
+        else:
+            data.enterRecommend = False
+            data.enterRecommend = False 
     elif data.drawCandle or data.drawSolidLine:
         margin = data.width/7
         if margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3 and data.backToPortfolio:
             data.portfolio = True 
             data.drawSolidLine = False
             data.backToPortfolio = False 
+            data.predicted = False 
         elif margin/3<=event.x<=margin and margin/3<=event.y<=margin*2/3:   
             data.enterStock= True 
             data.drawSolidLine = False 
+            data.predicted = False 
         elif data.drawSolidLine:
-            if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3:
+            if data.width-margin<=event.x<=data.width-margin/3 and margin/3<=event.y<=margin*2/3 and data.predicted==False:
                 (dates,values1) = RBF.mainPredict(data.line.displayDates,data.line.solidCloseValues,10)
                 values2 = RegressionModel.linearReg(data.line.dates,data.line.solidCloseValues,10)
                 values =[]
@@ -631,12 +669,12 @@ def mousePressed(event, data):
                     values.append((values1[i]+values2[i])/2)
                 data.line.addDates(dates)
                 data.line.predictedValues(values)
+                data.predicted = True 
                 
                 
             
 def enterUsername(letter):
     if letter in string.ascii_letters or letter in string.digits:
-        print('enter username')
         Cover.username+=letter
     elif letter=="BackSpace" and len(Cover.username)>0:
         Cover.username=Cover.username[:-1]
@@ -652,28 +690,47 @@ def enterPassword(letter):
 # 112 website format 
 # writes contents into file                
 def saveInfo(path,contents):
+    month = Portfolio.month
+    day = Portfolio.day
+    year = Portfolio.year
+    
+    startDate = year + '-'+month+'-'+day 
     with open(path, "wt") as f:
-        headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ',': ', 'graphs: ']
+        headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
         format = ''
         for row in contents:
             format+=headers[row]
             for i in range(len(contents[row])):
                 format+=contents[row][i] + " "  
             format+='\n'
+        format+=Portfolio.earnings+'\n'
+        format+=startDate 
         f.write(format)
+        
 
+# from 112 website 
 # reading info and reprinting out 
 def readFile(path):
    # items = {0:[""]*10,1:[""]*10, 2:[""]*10, 3:[""]*10, 4:[""]*10, 5:[""]*10}
-    headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ',': ', 'graphs: ']
+    headers = ['stock: ','buy/short: ','# shares: ','current price: ','payment: ','future date: ','future date price: ','earnings: ', 'graphs: ']
     with open(path, "rt") as f:
         contents = f.read()
         index = 0
-        for line in contents.splitlines():
+        date = contents.split('\n')[-1]
+        earnings = contents.split('\n')[-2]
+        contents = contents.split('\n')[:-1]
+        for line in contents:
             info = line[len(headers[index]):]
             for i in range(len(info.split(" "))-2):
                 Portfolio.items[index][i] = info.split(" ")[i]
             index+=1
+        date = date.split('-')
+        if len(date)==3:
+            Portfolio.day = date[2]
+            Portfolio.month = date[1]
+            Portfolio.year = date[0]
+        Portfolio.earnings = earnings 
+        
             
 
            
@@ -690,7 +747,7 @@ def myPortfolio(data,x,y):
                 day = Portfolio.day
                 month = Portfolio.month
                 year = Portfolio.year
-                #print('date predetermined',Graphs.Portfolio.month,Graphs.Portfolio.day,Graphs.Portfolio.year)
+                
                 if len(day)==1:
                     day = '0'+day
                 if len(month)==1:
@@ -710,20 +767,18 @@ def myPortfolio(data,x,y):
                 data.portfolio = False 
                 data.backToPortfolio = True 
             except:
-                print('failed')
                 pass 
         else:
             try:
                 day = Portfolio.day
                 month = Portfolio.month
                 year = Portfolio.year
-               # print('date predetermined',Graphs.Portfolio.month,Graphs.Portfolio.day,Graphs.Portfolio.year)
+               
                 if len(day)==1:
                     day = '0'+day
                 if len(month)==1:
                     month = '0'+month
                 start = year+'-'+month+'-'+day 
-                print('col2',col)
                 data.line = Solid(Portfolio.items[0][row],data.width,data.height,start,'2018-03-27')
                 data.line.getDates()
                 data.line.getClosingValues()
@@ -733,68 +788,78 @@ def myPortfolio(data,x,y):
                 data.portfolio = False
                 data.backToPortfolio = True 
             except:
-                print('failed')
                 pass 
     else:
         row = int((y-2*margin-rowWidth)/rowWidth)
     data.pFPoint = (row,col)
 
-#width-columnWidth,i*rowWidth+2*margin,width-columnWidth/2,(i+1)*rowWidth+2*margin (Y)
-#width-columnWidth/2,margin*2+i*rowWidth,width,margin*2+(i+1)*rowWidth (P)
+
 
 def redrawAll(canvas, data):
     if data.startState:
         Cover.draw(canvas,data.width,data.height)
     elif data.Choice:
-        data.choice = Choice()
-        data.choice.draw(canvas,data.width,data.height)
+        Choice.draw(canvas,data.width,data.height)
     elif data.enterStock:
         Option.draw(canvas,data.width,data.height,data)
     elif data.portfolio:
         Portfolio.drawEntry(canvas,data.width,data.height)
         Portfolio.drawItems(canvas,data.width,data.height)
+    elif data.recommend:
+        Recommend.draw(canvas,data.width,data.height)
     elif data.enterStock==False and data.drawCandle==True:
-        #try:
-        data.candle.drawCandleStick(canvas)
-        
-        print('drew')
-        #data.errorState = False 
-      #  except:
-        #data.errorState = True 
-       # Option.draw(canvas,data.width,data.height,data)
+        try:
+            data.candle.drawCandleStick(canvas)
+            data.errorState = False 
+        except:
+            data.errorState = True 
+            Option.draw(canvas,data.width,data.height,data)
     elif data.enterStock==False and data.drawSolidLine==True:
-        #try:
-        data.line.drawSolid(canvas)
-       # except:
-       # data.errorState = True 
-       # Option.draw(canvas,data.width,data.height,data)
+        try:
+            data.line.drawSolid(canvas)
+            data.errorState = False 
+        except:
+            data.errorState = True 
+            Option.draw(canvas,data.width,data.height,data)
     
                 
 
-# press s for solid line graph
-# press c for candlestick graph
-# press b to go back to original state
-# press p to predict  
+
 def keyPressed(event, data):
-    # no more of this-- use button 
     if data.startState:
         if data.username:
             enterUsername(event.keysym)
         elif data.password:
             enterPassword(event.keysym)
         elif event.keysym=="Return":
-            data.Choice = True 
-            data.startState = False
+            user = passwordHash.verify(Cover.username,Cover.password)
+            if data.newUser and  not passwordHash.existingUser(Cover.username,Cover.password):
+                data.user = passwordHash.newUser(Cover.username,Cover.password) 
+                data.infoError = False 
+                data.newUser = False 
+                data.Choice = True 
+                data.startState = False
+            elif user!='':
+                data.user = user 
+                data.Choice = True 
+                data.startState = False
+                data.infoError = False
+            else:
+                data.infoError = True 
     elif data.enterStock:
         letter = event.keysym
         controlInput(data,letter)
+    elif data.recommend==True and data.enterRecommend ==True:
+        letter = event.keysym 
+        print('enter rec 2')
+        if letter in string.ascii_letters:
+            print('enter rec 3')
+            Recommend.name += letter.upper()
+        elif len(Recommend.name)>0 and letter=="BackSpace":
+            Recommend.name = Recommend.name[:-1]
     elif data.portfolio:
-        print('hi')
-        print('stated 2',data.trainMonth)
         if data.trainMonth:
-            print('here')
             if event.keysym in string.digits:
-                print('entered',event.keysym)
                 Portfolio.month+=event.keysym
             elif event.keysym=="BackSpace" and len(Portfolio.month)>0:
                 Portfolio.month=Portfolio.month[:-1]
@@ -811,8 +876,8 @@ def keyPressed(event, data):
         else:
             letter = event.keysym 
             (posit,categ)= data.pFPoint
-            #print (posit,categ)
             enterPortfolio(posit,categ,letter)
+            
 
         
 
@@ -883,20 +948,19 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        #try:
-        data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
-        data.candle.getDates()
-        print('dates',data.candle.displayDates)
-        data.candle.getClosingValues()
-        data.candle.getScale()
-        data.candle.getLowValues()
-        data.candle.getHighValues()
-        data.candle.getOpenValues()
-        data.candle.getCloseValues()
-        data.enterStock=False
-        data.errorState = False 
-        #except:
-        data.errorState = True
+        try:
+            data.candle = CandleStick(Option.word,data.width,data.height,startDate,endDate)
+            data.candle.getDates()
+            data.candle.getClosingValues()
+            data.candle.getScale()
+            data.candle.getLowValues()
+            data.candle.getHighValues()
+            data.candle.getOpenValues()
+            data.candle.getCloseValues()
+            data.enterStock=False
+            data.errorState = False 
+        except:
+            data.errorState = True
              
     if (6.5*data.width/10)<=x<=(8.5*data.width/10) and (14*data.height/20)<=y<=(data.height*17/20):
         data.drawSolidLine=True 
@@ -911,15 +975,14 @@ def enterOptions(data,x,y):
         if len(Option.endDay)==1: eDay = "0"+Option.endDay 
         endDate = Option.endYear+"-"+eMonth+"-"+eDay 
         startDate = Option.startYear+"-"+sMonth+"-"+sDay
-        #try:
-        data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
-        data.line.getDates()
-        data.line.getClosingValues()
-        data.enterStock=False
-        data.errorState = False          
-       # except:
-          
-        data.errorState = True 
+        try:
+            data.line = Solid(Option.word,data.width,data.height,startDate,endDate)
+            data.line.getDates()
+            data.line.getClosingValues()
+            data.enterStock=False
+            data.errorState = False          
+        except:
+            data.errorState = True 
             
 def controlInput(data,letter):
     if data.stockName:
@@ -958,13 +1021,7 @@ def controlInput(data,letter):
         elif letter in string.digits and len(Option.endYear)<4:
             Option.endYear+=letter
 
-# password and username hashing https://pythonprogramming.net/password-hashing-flask-tutorial/            
-#import hashlib 
-#username = input('username: ')
-#password = input('password: ')
-#together = username+password
-#h = hashlib.md5(together.encode())
-#print(h.hexdigest())
+
    
          
 def timerFired(data):
